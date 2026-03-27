@@ -656,7 +656,16 @@ function updateEngineUI() {
 // ═══════════════════════════════════════
 // SHORTCUTS & AI TOOLS
 // ═══════════════════════════════════════
+const KNOWN_FAVICONS = {
+    'gmail.com': 'https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_48dp.png',
+    'mail.google.com': 'https://www.gstatic.com/images/branding/product/2x/gmail_2020q4_48dp.png',
+    'drive.google.com': 'https://www.gstatic.com/images/branding/product/2x/drive_2020q4_48dp.png',
+    'maps.google.com': 'https://www.gstatic.com/images/branding/product/2x/maps_2020q4_48dp.png',
+};
+
 function getShortcutFavicon(url) {
+    const domain = getDomain(url);
+    if (KNOWN_FAVICONS[domain]) return KNOWN_FAVICONS[domain];
     return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(url)}&size=64`;
 }
 
