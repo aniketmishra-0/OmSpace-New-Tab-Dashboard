@@ -656,13 +656,17 @@ function updateEngineUI() {
 // ═══════════════════════════════════════
 // SHORTCUTS & AI TOOLS
 // ═══════════════════════════════════════
+function getShortcutFavicon(url) {
+    return `https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(url)}&size=64`;
+}
+
 function renderShortcuts() {
     const grid = $('#shortcuts-grid');
     if (!grid) return;
     grid.innerHTML = state.shortcuts.map((s, i) => `
         <a href="${esc(s.url)}" class="shortcut-item" data-idx="${i}">
             <div class="shortcut-icon">
-                <img src="https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=64" alt="${esc(s.name)}" class="shortcut-favicon">
+                <img src="${getShortcutFavicon(s.url)}" alt="${esc(s.name)}" class="shortcut-favicon">
                 <span class="material-symbols-rounded shortcut-icon-fallback" style="display:none">${esc(s.icon)}</span>
             </div>
             <span class="shortcut-label">${esc(s.name)}</span>
