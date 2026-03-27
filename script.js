@@ -722,7 +722,7 @@ function renderSocialDock() {
         if (svgPath) {
             iconHtml = `<svg viewBox="0 0 24 24" fill="currentColor">${svgPath}</svg>`;
         } else {
-            iconHtml = `<img src="https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=32" alt="${esc(link.name)}" style="width:16px;height:16px;border-radius:3px">`;
+            iconHtml = `<img src="https://www.google.com/s2/favicons?domain=${getDomain(link.url)}&sz=32" alt="${esc(link.name)}">`;
         }
         return `<a href="${esc(link.url)}" target="_blank" class="social-icon" data-social="${esc(iconKey)}">${iconHtml}<span class="social-tooltip">${esc(link.name)}</span></a>`;
     }).join('');

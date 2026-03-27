@@ -265,9 +265,9 @@ ul{list-style:none}
 .social-dock:hover .social-edit-btn{opacity:1}
 .social-edit-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--border-accent);transform:scale(1.1)}
 .social-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--surface-2);border:1px solid transparent;color:var(--text-secondary);transition:all var(--dur-fast) var(--ease-spring);position:relative}
-.social-icon svg{width:16px;height:16px;transition:transform var(--dur-fast) var(--ease-spring)}
-.social-icon:hover{transform:translateY(-6px) scale(1.18);border-color:var(--border-accent);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
-.social-icon:hover svg{transform:scale(1.1)}
+.social-icon svg, .social-icon img {width:16px;height:16px;border-radius:3px;transition:transform var(--dur-fast) var(--ease-spring)}
+.social-icon:hover{transform:translateY(-6px) scale(1.18);background:var(--accent-dim);border-color:var(--border-accent);color:var(--accent);box-shadow:0 8px 24px rgba(0,0,0,0.3)}
+.social-icon:hover svg, .social-icon:hover img {transform:scale(1.1)}
 .social-tooltip{position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(4px);background:rgba(15,17,24,0.9);color:#fff;font-size:.65rem;font-weight:600;padding:4px 10px;border-radius:8px;white-space:nowrap;opacity:0;pointer-events:none;transition:all var(--dur-fast) var(--ease-out);border:1px solid var(--border)}
 [data-theme="light"] .social-tooltip{background:rgba(26,28,46,0.9)}
 .social-icon:hover .social-tooltip{opacity:1;transform:translateX(-50%) translateY(0)}
