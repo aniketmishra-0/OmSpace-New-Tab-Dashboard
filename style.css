@@ -266,7 +266,7 @@ ul{list-style:none}
 .social-edit-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--border-accent);transform:scale(1.1)}
 .social-icon{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--surface-2);border:1px solid transparent;color:var(--text-secondary);transition:all var(--dur-fast) var(--ease-spring);position:relative}
 .social-icon svg, .social-icon img {width:16px;height:16px;border-radius:3px;transition:transform var(--dur-fast) var(--ease-spring),filter var(--dur-fast) ease}
-.social-icon img{filter:grayscale(1) brightness(0.8);opacity:0.7}
+.social-icon img{filter:grayscale(1) brightness(0.55) contrast(0.9);opacity:0.6}
 .social-icon:hover{transform:translateY(-6px) scale(1.18);background:var(--accent);border-color:var(--accent);color:var(--bg-base);box-shadow:var(--shadow-glow)}
 .social-icon:hover svg, .social-icon:hover img {transform:scale(1.1)}
 .social-icon:hover img{filter:grayscale(0) brightness(1);opacity:1}
