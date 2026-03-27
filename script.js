@@ -19,7 +19,24 @@ const QUOTES = [
     { text: "Your time is limited, don't waste it living someone else's life.", author: "Steve Jobs" },
     { text: "Be yourself; everyone else is already taken.", author: "Oscar Wilde" },
     { text: "Do what you can, with what you have, where you are.", author: "Theodore Roosevelt" },
-    { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" }
+    { text: "The only impossible journey is the one you never begin.", author: "Tony Robbins" },
+    { text: "Keep your face always toward the sunshine—and shadows will fall behind you.", author: "Walt Whitman" },
+    { text: "What lies behind you and what lies in front of you, pales in comparison to what lies inside of you.", author: "Ralph Waldo Emerson" },
+    { text: "Happiness is not something ready made. It comes from your own actions.", author: "Dalai Lama" },
+    { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+    { text: "If you can dream it, you can do it.", author: "Walt Disney" },
+    { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+    { text: "Magic is believing in yourself. If you can make that happen, you can make anything happen.", author: "Johann Wolfgang von Goethe" },
+    { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+    { text: "Every champion was once a contender that didn't give up.", author: "Gabby Douglas" },
+    { text: "Doubt kills more dreams than failure ever will.", author: "Suzy Kassem" },
+    { text: "Turn your wounds into wisdom.", author: "Oprah Winfrey" },
+    { text: "You are never too old to set another goal or to dream a new dream.", author: "C.S. Lewis" },
+    { text: "The harder you work for something, the greater you'll feel when you achieve it.", author: "Anonymous" },
+    { text: "Someday is not a day of the week.", author: "Janet Dailey" },
+    { text: "Great things are done by a series of small things brought together.", author: "Vincent Van Gogh" },
+    { text: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+    { text: "The only limit to our realization of tomorrow is our doubts of today.", author: "Franklin D. Roosevelt" }
 ];
 
 const DEFAULT_STATE = {
@@ -329,10 +346,12 @@ function updateClock() {
     const s = now.getSeconds();
 
     // Greeting
-    let greet = 'Good Evening';
-    if (h < 12) greet = 'Good Morning';
-    else if (h < 18) greet = 'Good Afternoon';
-    if (state.userName) greet += `, ${state.userName}`;
+    let greetText = 'Good Evening';
+    let emoji = '🌙';
+    if (h < 12) { greetText = 'Good Morning'; emoji = '☕️'; }
+    else if (h < 18) { greetText = 'Good Afternoon'; emoji = '☀️'; }
+    
+    let greet = state.userName ? `${greetText}, ${state.userName}! ${emoji}` : `${greetText}! ${emoji}`;
 
     // Digital
     const hDisplay = state.use24Hour ? (h < 10 ? '0' + h : h) : (h % 12 || 12);
@@ -581,11 +600,36 @@ function clearFocus() {
 // ═══════════════════════════════════════
 // QUOTE OF THE DAY
 // ═══════════════════════════════════════
-function renderQuote() {
-    const dayIndex = Math.floor(Date.now() / 86400000) % QUOTES.length;
-    const q = QUOTES[dayIndex];
-    updateEl('#quote-text', `"${q.text}"`);
-    updateEl('#quote-author', `— ${q.author}`);
+async function renderQuote() {
+    const today = new Date().toDateString();
+    const cachedDate = localStorage.getItem('omspace_quote_date');
+    const cachedText = localStorage.getItem('omspace_quote_text');
+    const cachedAuthor = localStorage.getItem('omspace_quote_author');
+
+    if (cachedDate === today && cachedText && cachedAuthor) {
+        updateEl('#quote-text', `"${cachedText}"`);
+        updateEl('#quote-author', `— ${cachedAuthor}`);
+        return;
+    }
+
+    try {
+        const res = await fetch('https://dummyjson.com/quotes/random?minlength=40&maxlength=150');
+        if (!res.ok) throw new Error('Network error');
+        const data = await res.json();
+        
+        localStorage.setItem('omspace_quote_date', today);
+        localStorage.setItem('omspace_quote_text', data.quote);
+        localStorage.setItem('omspace_quote_author', data.author);
+        
+        updateEl('#quote-text', `"${data.quote}"`);
+        updateEl('#quote-author', `— ${data.author}`);
+    } catch(err) {
+        // Fallback to offline array if no internet
+        const dayIndex = Math.floor(Date.now() / 86400000) % QUOTES.length;
+        const q = QUOTES[dayIndex];
+        updateEl('#quote-text', `"${q.text}"`);
+        updateEl('#quote-author', `— ${q.author}`);
+    }
 }
 
 // ═══════════════════════════════════════
