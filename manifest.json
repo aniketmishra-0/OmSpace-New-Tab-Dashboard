@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "OmSpace - New Tab Dashboard",
   "version": "1.0.0",
-  "description": "OmSpace — A premium, customizable new tab dashboard inspired by Material You design. Features clock, weather, todos, bookmarks, AI tools, social dock, and more.",
+  "description": "A premium, customizable new tab dashboard inspired by Material You. Features productivity widgets, AI docks, and live backgrounds.",
   "chrome_url_overrides": {
     "newtab": "index.html"
   },
