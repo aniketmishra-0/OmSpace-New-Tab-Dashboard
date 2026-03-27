@@ -661,9 +661,20 @@ function renderShortcuts() {
     if (!grid) return;
     grid.innerHTML = state.shortcuts.map((s, i) => `
         <a href="${esc(s.url)}" class="shortcut-item" data-idx="${i}">
-            <div class="shortcut-icon"><span class="material-symbols-rounded">${esc(s.icon)}</span></div>
+            <div class="shortcut-icon">
+                <img src="https://www.google.com/s2/favicons?domain=${getDomain(s.url)}&sz=64" alt="${esc(s.name)}" class="shortcut-favicon">
+                <span class="material-symbols-rounded shortcut-icon-fallback" style="display:none">${esc(s.icon)}</span>
+            </div>
             <span class="shortcut-label">${esc(s.name)}</span>
         </a>`).join('');
+
+    // Fallback to material icon if favicon fails
+    grid.querySelectorAll('.shortcut-favicon').forEach(img => {
+        img.addEventListener('error', function() {
+            this.style.display = 'none';
+            if (this.nextElementSibling) this.nextElementSibling.style.display = 'flex';
+        });
+    });
 }
 
 function renderAiTools() {

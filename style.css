@@ -212,6 +212,8 @@ ul{list-style:none}
 .shortcut-icon{width:46px;height:46px;border-radius:14px;background:var(--surface-2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;transition:all var(--dur-fast) var(--ease-out);box-shadow:0 2px 8px rgba(0,0,0,.08)}
 .shortcut-item:hover .shortcut-icon{background:var(--accent-dim);border-color:var(--border-accent);box-shadow:var(--shadow-glow)}
 .shortcut-icon .material-symbols-rounded{font-size:22px;color:var(--accent)}
+.shortcut-favicon{width:24px;height:24px;border-radius:4px;object-fit:contain}
+.shortcut-icon-fallback{font-size:22px;color:var(--accent)}
 .shortcut-label{font-size:.65rem;font-weight:500;color:var(--text-secondary);text-align:center;max-width:62px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
 /* === INLINE POMODORO (center row) === */
