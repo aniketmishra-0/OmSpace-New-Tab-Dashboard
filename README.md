@@ -1,61 +1,170 @@
-# OmSpace - New Tab Dashboard
-<p align="center">
-  <b>A Premium, Highly Customizable Material You Inspired New Tab Extension</b>
-</p>
+<div align="center">
 
-OmSpace transforms your Chrome default new tab into a stunning, distraction-free, and productive dashboard. Designed with Google's modern "Material You" aesthetic, OmSpace features smooth glassmorphic designs, vibrant fluid gradients, and fully resizable interactive widgets.
+# 🚀 OmSpace — New Tab Dashboard
 
-> 🌍 **Multi-Language Support (Universal Customization):**  
-> OmSpace is built to support you in **any language**! Since everything from your Shortcuts, AI Tools, Social Links, Habits, and Bookmarks can be manually renamed and customized, you can easily type and set up your dashboard in **Hindi, English, Spanish, or any language you prefer**. 
+### *Your browser's new tab, reimagined.*
 
-## ✨ Features
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Chrome Extension](https://img.shields.io/badge/Platform-Chrome%20%7C%20Edge%20%7C%20Brave-brightgreen)](https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard)
+[![Made with JS](https://img.shields.io/badge/Built%20With-HTML%20%7C%20CSS%20%7C%20JS-orange)](https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard)
+[![PRs Welcome](https://img.shields.io/badge/PRs-Welcome-ff69b4.svg)](https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard/pulls)
 
-- **Dynamic Ambient Backgrounds**: Choose between custom URLs, preset images, or live interactive fluid wallpaper.
-- **Material You Theming**: Pick from multiple system fonts and carefully curated accent colors to match your vibe.
-- **Interactive Free-Form Layout**: Drag, drop, and resize any widget anywhere on the screen! Turn "Layout Lock" off to redesign your workspace.
-- **Productivity Arsenal**:
-  - **Pomodoro Timer**: In-built focus cycles.
-  - **To-Do List**: Manage daily tasks persistently.
-  - **Habit Tracker**: Keep track of daily goals.
-  - **Quick Notes**: Jot thoughts instantly.
-  - **Reading List & Bookmarks**: Save links to read later with dynamic Grid/List views.
-- **Dynamic AI & Social Docks**:
-  - One-click dock for ChatGPT, Gemini, Copilot, DeepSeek, and Claude.
-  - Editable Social Media dock with smart automatic fallback icons for lesser-known websites.
-  - Quick Google Apps drawer.
-- **Time & Weather**: Real-time clocks, optional 24-hour formats, and multi-timezone World Clocks.
-- **Cloud Backup & Restore**: Export all your carefully set layouts, shortcuts, and themes to a JSON file and bring them to another computer in seconds. 
-- **100% Privacy**: All data is stored purely in your local browser `localStorage`. No trackers, no servers, no telemetry.
+<br/>
 
-## 🛠 Installation Guide
+**OmSpace** transforms your boring default new tab into a **stunning, productive, and fully customizable dashboard** — inspired by Google's *Material You* design language with glassmorphism, fluid gradients, and buttery-smooth animations.
 
-Because this extension is not yet published on the Chrome Web Store, you can manually load it in Google Chrome or Edge:
+> 🌍 **Universal Language Support** — Type your shortcuts, habits, bookmarks, and notes in **any language** you want. Hindi, English, Spanish, Japanese — it's all yours.
 
-1. Download or "Clone" this repository (`git clone https://github.com/aniketmishra-0/OmSpace---New-Tab-Dashboard.git`).
-2. Open your chromium-based browser and navigate to `chrome://extensions`.
-3. Turn on the **Developer mode** toggle in the top-right corner.
-4. Click the **Load unpacked** button.
-5. Select the folder containing these downloaded files (where `manifest.json` is located).
-6. Open a New Tab and enjoy your new dashboard!
+<br/>
 
-## ⚙️ Customization & Controls
+---
 
-- **Settings Menu**: Click the standard gear/slider icon floating at the bottom right to access deep customization.
-- **Editing Widgets**: Inside the settings, toggle "Lock Layout" off. You can now resize the cards from their bottom-right corners and drag them by their headers.
-- **Edit Content**: With "Lock Layout" turned OFF, hover over sections like 'AI Tools' or 'Social Dock' to reveal the **Pencil icon ✏️**. Click it to Add, Edit, or Remove custom links.
+</div>
+
+## ⚡ Feature Highlights
+
+<table>
+<tr>
+<td width="50%">
+
+### 🎨 Theming & Design
+- Material You accent color picker
+- Dark / Light mode toggle
+- Multiple premium font families
+- Glassmorphic cards with ambient blur
+- Fluid animated gradient wallpapers
+- Custom background image URL support
+
+</td>
+<td width="50%">
+
+### ⏱ Productivity Suite
+- **Pomodoro Timer** — Focus cycles built-in
+- **To-Do List** — Persistent task management
+- **Habit Tracker** — Daily streak tracking
+- **Quick Notes** — Instant thought capture
+- **Reading List** — Save-for-later with Grid/List views
+- **Focus Goal** — Set your daily intention
+
+</td>
+</tr>
+<tr>
+<td width="50%">
+
+### 🔗 Smart Links & Docks
+- **AI Tools Dock** — ChatGPT, Gemini, Claude, Copilot, DeepSeek
+- **Social Media Dock** — YouTube, GitHub, X, Instagram, Spotify & more
+- **Google Apps Drawer** — Docs, Sheets, Drive, Meet, Keep
+- **Custom Shortcuts Grid** — Add any website
+- Auto-fetching favicons for unknown sites
+- Brand-colored hover effects per platform
+
+</td>
+<td width="50%">
+
+### 🕐 Time & Information
+- Digital + Analog clock (switchable)
+- 12h / 24h format support  
+- **Multi-timezone World Clocks**
+- **Live Daily Quote** — Fresh from API every day
+- Dynamic greeting — *"Good Morning, Aniket! ☕"*
+- Date display with locale formatting
+
+</td>
+</tr>
+</table>
+
+### 🛡️ Privacy & Data
+
+| Feature | Detail |
+|---|---|
+| **100% Offline** | All data lives in your browser's `localStorage`. Zero servers. |
+| **No Tracking** | No analytics, no telemetry, no cookies. |
+| **Backup & Restore** | Export/Import your entire setup as a single JSON file. |
+| **Open Source** | MIT Licensed. Audit every line yourself. |
+
+---
+
+## 🖥️ Installation
+
+### Method 1: Load Unpacked (Developer Mode)
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard.git
+
+# 2. Open your browser
+#    Navigate to chrome://extensions (or edge://extensions)
+
+# 3. Enable "Developer mode" (top-right toggle)
+
+# 4. Click "Load unpacked"
+#    Select the cloned folder (where manifest.json lives)
+
+# 5. Open a New Tab — enjoy OmSpace! 🎉
+```
+
+> 💡 **Works on:** Google Chrome, Microsoft Edge, Brave, Opera, Arc, and any Chromium-based browser.
+
+---
+
+## ⚙️ Customization Guide
+
+| Action | How |
+|---|---|
+| Open Settings | Click the **⚙️ gear icon** (bottom-right) |
+| Change Theme | Settings → Accent Color / Dark-Light toggle |
+| Change Background | Settings → Background Mode (Gradient / Image URL / Live Wallpaper) |
+| Rearrange Widgets | Settings → Turn off "Lock Layout" → Drag & resize cards freely |
+| Edit AI Tools / Social Links | Unlock layout → Hover over a section → Click **✏️ Pencil** icon |
+| Add Custom Shortcuts | Hover over Shortcuts section → Click **+ Add** |
+| Backup Settings | Settings → Export → Downloads a `.json` file |
+| Restore Settings | Settings → Import → Pick your backup `.json` |
+| Reset Everything | Settings → Reset → Confirms via popup → Factory fresh! |
+
+---
+
+## 🏗️ Tech Stack
+
+```
+├── manifest.json     → Chrome Extension manifest (Manifest V3)
+├── index.html        → Single-page dashboard UI
+├── style.css         → Full design system (CSS Variables, Grid, Animations)
+├── script.js         → All logic (State management, Drag & Drop, API calls)
+├── icon.png          → Extension icon
+├── LICENSE           → MIT License
+└── README.md         → You are here!
+```
+
+**No frameworks. No dependencies. No build step.**  
+Pure HTML + CSS + JavaScript — fast, lightweight, and hackable.
+
+---
 
 ## 🤝 Contributing
 
-Pull requests are fully welcome! Want to add a new widget or refine a feature?
-1. Fork the project.
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`).
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`).
-4. Push to the branch (`git push origin feature/AmazingFeature`).
-5. Open a Pull Request.
+We'd love your help making OmSpace even better!
+
+1. **Fork** the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Commit your changes: `git commit -m "feat: Add amazing feature"`
+4. Push to branch: `git push origin feature/amazing-feature`  
+5. Open a **Pull Request**
+
+> 💡 **Ideas?** Open an [Issue](https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard/issues) to discuss new widgets, themes, or improvements.
+
+---
 
 ## 📜 License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the **MIT License**. See [`LICENSE`](LICENSE) for details.
 
 ---
-*Created with ❤️ by Aniket Mishra.*
+
+<div align="center">
+
+**Built with ❤️ by [Aniket Mishra](https://github.com/aniketmishra-0)**
+
+*If you like OmSpace, consider giving it a ⭐ on GitHub!*
+
+</div>
