@@ -606,14 +606,14 @@ async function renderQuote() {
     const cachedText = localStorage.getItem('omspace_quote_text');
     const cachedAuthor = localStorage.getItem('omspace_quote_author');
 
-    if (cachedDate === today && cachedText && cachedAuthor) {
+    if (cachedDate === today && cachedText && cachedAuthor && cachedText.length <= 85) {
         updateEl('#quote-text', `"${cachedText}"`);
         updateEl('#quote-author', `— ${cachedAuthor}`);
         return;
     }
 
     try {
-        const res = await fetch('https://dummyjson.com/quotes/random?minlength=40&maxlength=150');
+        const res = await fetch('https://dummyjson.com/quotes/random?minlength=20&maxlength=85');
         if (!res.ok) throw new Error('Network error');
         const data = await res.json();
         
