@@ -65,9 +65,12 @@ If you are publishing or testing a packaged build, the ZIP must contain the exte
 
 - `manifest.json`
 - `index.html`
+- `i18n-data.js`
 - `script.js`
 - `style.css`
-- `icon.png`
+- `icon-16.png`
+- `icon-48.png`
+- `icon-128.png`
 
 Do not ZIP the parent folder itself, otherwise the store/uploader will not find `manifest.json` at the top level.
 
@@ -112,6 +115,11 @@ Some features make optional network requests when you use them:
 
 If you enable `Sync Core Settings`, a subset of preferences is stored through `chrome.storage.sync` so it can follow your browser profile.
 
+A standalone privacy policy page is also included in this repository:
+
+- `privacy.html` for the publishable privacy policy content and structure
+- `privacy.css` for the dedicated futuristic glass-styled presentation
+
 ## Permissions
 
 | Permission | Why OmSpace uses it |
@@ -127,9 +135,16 @@ If you enable `Sync Core Settings`, a subset of preferences is stored through `c
 ```text
 manifest.json   Extension manifest (Manifest V3)
 index.html      New tab UI
+i18n-data.js    Generated translation bundle
+privacy.html    Standalone privacy policy page
+privacy.css     Dedicated privacy policy styling
 style.css       Design system, layout, and widget styling
 script.js       State, rendering, widget logic, browser integrations
-icon.png        Extension icon
+scripts/        Utility scripts (including i18n generation)
+icon-16.png     Extension icon (16x16)
+icon-48.png     Extension icon (48x48)
+icon-128.png    Extension icon (128x128)
+icon.png        Source artwork retained for reference
 README.md       Project documentation
 LICENSE         MIT license
 ```
