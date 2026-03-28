@@ -122,6 +122,7 @@ let pomoRunning = false;
 let pomoIsWork = true;
 let currentEditMode = null;
 let particlesAnimId = null;
+let restartParticlesAnimation = null;
 
 const ENGINES = {
     google: { url: 'https://www.google.com/search?q=', label: 'G' },
@@ -151,11 +152,10 @@ function init() {
     loadState();
     renderAll();
     startClock();
-    fetchWeather();
+    if (state.showWeather) fetchWeather();
     initParticles();
     setupAllEvents();
     initCollapsibles();
-    initBottomWidgets();
 }
 
 // ═══════════════════════════════════════
@@ -214,7 +214,7 @@ function renderAll() {
     loadQuickNote();
     updatePomoDisplay();
     applyParticles();
-    initBottomWidgets();
+    if (state.showBottomWidgets) initBottomWidgets();
     renderSocialDock();
     loadLayout();
     initDragAndDrop();
@@ -880,7 +880,7 @@ function updateWorldClockTimes() {
                 timeZone: wc.tz,
                 hour: '2-digit',
                 minute: '2-digit',
-                hour12: true
+                hour12: !state.use24Hour
             });
             el.textContent = time;
         } catch {
@@ -916,13 +916,27 @@ function renderReadingList() {
         const favicon = `https://www.google.com/s2/favicons?domain=${domain}&sz=32`;
         return `
         <a href="${esc(item.url)}" class="reading-item" target="_blank" data-idx="${i}">
-            <img src="${favicon}" alt="" onerror="this.style.display='none'" loading="lazy">
+            <img src="${favicon}" alt="" loading="lazy">
             <span class="reading-title">${esc(item.title || item.url)}</span>
-            <button class="reading-delete" data-ridx="${i}" onclick="event.preventDefault();event.stopPropagation();deleteReading(${i})">
+            <button class="reading-delete" data-ridx="${i}">
                 <span class="material-symbols-rounded">close</span>
             </button>
         </a>`;
     }).join('');
+
+    list.querySelectorAll('.reading-item img').forEach(img => {
+        img.addEventListener('error', () => {
+            img.style.display = 'none';
+        });
+    });
+
+    list.querySelectorAll('.reading-delete').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            deleteReading(parseInt(btn.dataset.ridx, 10));
+        });
+    });
 }
 
 function addReading() {
@@ -970,10 +984,16 @@ function renderBookmarkItems(container, items) {
         const title = bm.title || url;
         const domain = getDomain(url);
         return `<a href="${url}" class="bookmark-item" title="${esc(title)}">
-            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" loading="lazy" onerror="this.style.display='none'">
+            <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" loading="lazy">
             <span class="bookmark-title">${esc(title)}</span>
         </a>`;
     }).join('');
+
+    container.querySelectorAll('img').forEach(img => {
+        img.addEventListener('error', () => {
+            img.style.display = 'none';
+        });
+    });
 }
 
 // ═══════════════════════════════════════
@@ -984,9 +1004,15 @@ function applyParticles() {
     if (!canvas) return;
     if (state.particles) {
         canvas.classList.remove('hidden');
+        if (restartParticlesAnimation && !particlesAnimId) {
+            restartParticlesAnimation();
+        }
     } else {
         canvas.classList.add('hidden');
-        if (particlesAnimId) cancelAnimationFrame(particlesAnimId);
+        if (particlesAnimId) {
+            cancelAnimationFrame(particlesAnimId);
+            particlesAnimId = null;
+        }
     }
 }
 
@@ -1016,7 +1042,7 @@ function initParticles() {
 
     function animate() {
         if (!state.particles) {
-            particlesAnimId = requestAnimationFrame(animate);
+            particlesAnimId = null;
             return;
         }
         ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -1034,7 +1060,16 @@ function initParticles() {
         });
         particlesAnimId = requestAnimationFrame(animate);
     }
-    animate();
+
+    restartParticlesAnimation = () => {
+        if (!particlesAnimId) {
+            particlesAnimId = requestAnimationFrame(animate);
+        }
+    };
+
+    if (state.particles) {
+        restartParticlesAnimation();
+    }
 }
 
 // ═══════════════════════════════════════
@@ -1272,7 +1307,9 @@ function setupAllEvents() {
 
     // Widget toggles — ALL
     bindToggle('#toggle-clock', 'showClock');
-    bindToggle('#toggle-weather', 'showWeather');
+    bindToggle('#toggle-weather', 'showWeather', () => {
+        if (state.showWeather) fetchWeather();
+    });
     bindToggle('#toggle-pomodoro', 'showPomodoro');
     bindToggle('#toggle-focus', 'showFocus');
     bindToggle('#toggle-quote', 'showQuote');
@@ -1285,7 +1322,9 @@ function setupAllEvents() {
     bindToggle('#toggle-worldclock', 'showWorldclock');
     bindToggle('#toggle-reading', 'showReading');
     bindToggle('#toggle-bookmarks', 'showBookmarks');
-    bindToggle('#toggle-bottomwidgets', 'showBottomWidgets');
+    bindToggle('#toggle-bottomwidgets', 'showBottomWidgets', () => {
+        if (state.showBottomWidgets) initBottomWidgets();
+    });
     bindToggle('#toggle-socialdock', 'showSocialDock');
 
     // User name
@@ -1545,6 +1584,7 @@ const TECH_FACTS = [
 ];
 
 function initBottomWidgets() {
+    if (!state.showBottomWidgets) return;
     const factText = $('#tech-fact-text');
     if (factText) {
         factText.textContent = TECH_FACTS[Math.floor(Math.random() * TECH_FACTS.length)];
@@ -1625,7 +1665,7 @@ function loadLayout() {
 function saveLayout() {
     // Save free placement absolute items
     const freeLayout = state.freeLayout || {};
-    $$('.col-left > *, .col-center > *, .col-right > *, body > .glass-card, body > .quote-section, body > .search-section, body > .shortcuts-section, body > .pomo-inline-section, body > .bottom-widget').forEach(el => {
+    $$('.col-left > *, .col-center > *, .col-right > *, body > .glass-card, body > .quote-section, body > .search-section, body > .shortcuts-section, body > .pomo-inline-section, body > .bottom-widget, body > .bottom-widgets-section').forEach(el => {
         if (el.style.position === 'absolute' || el.style.width || el.style.height) {
             const id = el.id ? '#' + el.id : '.' + el.className.split(' ')[0];
             if (!freeLayout[id]) freeLayout[id] = {};
@@ -1654,7 +1694,7 @@ function saveLayout() {
 }
 
 function initDragAndDrop() {
-    const cards = $$('.col-left > *, .col-center > *, .col-right > *, body > .glass-card, body > .quote-section, body > .shortcuts-section, body > .pomo-inline-section, body > .search-section, body > .bottom-widget');
+    const cards = $$('.col-left > *, .col-center > *, .col-right > *, body > .glass-card, body > .quote-section, body > .shortcuts-section, body > .pomo-inline-section, body > .search-section, body > .bottom-widget, body > .bottom-widgets-section');
 
     cards.forEach(card => {
         if (!state.layoutLocked) card.classList.add('is-unlocked');
