@@ -117,8 +117,8 @@ If you enable `Sync Core Settings`, a subset of preferences is stored through `c
 
 A standalone privacy policy page is also included in this repository:
 
-- `privacy.html` for the publishable privacy policy content and structure
-- `privacy.css` for the dedicated futuristic glass-styled presentation
+- [`Docs/privacy.html`](Docs/privacy.html) for the publishable privacy policy content and structure
+- [`Docs/privacy.css`](Docs/privacy.css) for the dedicated futuristic glass-styled presentation
 
 ## Permissions
 
@@ -136,8 +136,9 @@ A standalone privacy policy page is also included in this repository:
 manifest.json   Extension manifest (Manifest V3)
 index.html      New tab UI
 i18n-data.js    Generated translation bundle
-privacy.html    Standalone privacy policy page
-privacy.css     Dedicated privacy policy styling
+Docs/             Documentation assets and standalone privacy policy files
+Docs/privacy.html Standalone privacy policy page
+Docs/privacy.css  Dedicated privacy policy styling
 style.css       Design system, layout, and widget styling
 script.js       State, rendering, widget logic, browser integrations
 scripts/        Utility scripts (including i18n generation)
