@@ -5,7 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy | MYNT: Material You New Tab</title>
     <meta name="description" content="Privacy Policy for MYNT: Material You New Tab. Learn what the extension accesses, which services it uses, and how it protects your privacy.">
-    <link rel="icon" type="image/png" href="../icon-48.png">
+    <script>
+        (() => {
+            const storedTheme = localStorage.getItem('privacy-theme');
+            const preferredTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', storedTheme || preferredTheme);
+        })();
+    </script>
+    <link rel="icon" type="image/png" href="icon-128.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
@@ -19,12 +26,22 @@
     <div class="page-shell">
         <header class="hero-panel" id="top">
             <div class="hero-copy">
-                <div class="hero-eyebrow">
-                    <span class="eyebrow-pill">Privacy First</span>
-                    <span class="eyebrow-pill eyebrow-pill-muted">Last updated March 28, 2026</span>
+                <div class="hero-topbar">
+                    <div class="hero-eyebrow">
+                        <span class="eyebrow-pill">Privacy First</span>
+                        <span class="eyebrow-pill eyebrow-pill-muted">Last updated March 28, 2026</span>
+                    </div>
+                    <button id="theme-toggle" class="theme-toggle" type="button" aria-live="polite">
+                        <span class="theme-toggle-track" aria-hidden="true">
+                            <span class="theme-toggle-knob"></span>
+                        </span>
+                        <span class="theme-toggle-text" id="theme-toggle-text">Dark mode</span>
+                    </button>
                 </div>
                 <div class="brand-row">
-                    <div class="brand-mark" aria-hidden="true">M</div>
+                    <div class="brand-mark">
+                        <img class="brand-logo" src="icon-128.png" alt="MYNT extension logo">
+                    </div>
                     <div>
                         <p class="brand-label">MYNT Policy Center</p>
                         <h1>Privacy Policy for MYNT: Material You New Tab</h1>
@@ -40,7 +57,7 @@
                     does, which optional permissions it uses, and which external services power certain features.
                 </p>
                 <div class="hero-actions">
-                    <a class="cta-primary" href="https://github.com/aniketmishra-0/OmSpace---New-Tab-Dashboard" target="_blank" rel="noreferrer">View Source</a>
+                    <a class="cta-primary" href="https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard" target="_blank" rel="noreferrer">View Source</a>
                     <a class="cta-secondary" href="#services">Review External Services</a>
                 </div>
             </div>
@@ -367,7 +384,7 @@
                     </p>
                     <div class="footer-actions">
                         <a class="cta-primary" href="#top">Back to Top</a>
-                        <a class="cta-secondary" href="https://github.com/aniketmishra-0/OmSpace---New-Tab-Dashboard" target="_blank" rel="noreferrer">Open GitHub Repository</a>
+                        <a class="cta-secondary" href="https://github.com/aniketmishra-0/OmSpace-New-Tab-Dashboard" target="_blank" rel="noreferrer">Open GitHub Repository</a>
                     </div>
                 </section>
             </div>
@@ -375,10 +392,33 @@
     </div>
 
     <script>
+        const root = document.documentElement;
+        const themeToggle = document.querySelector('#theme-toggle');
+        const themeToggleText = document.querySelector('#theme-toggle-text');
         const navLinks = [...document.querySelectorAll('.policy-nav a')];
         const sections = navLinks
             .map((link) => document.querySelector(link.getAttribute('href')))
             .filter(Boolean);
+
+        const applyTheme = (theme) => {
+            root.setAttribute('data-theme', theme);
+
+            if (!themeToggle || !themeToggleText) return;
+
+            const nextTheme = theme === 'dark' ? 'light' : 'dark';
+            const currentLabel = theme === 'dark' ? 'Dark mode' : 'Light mode';
+            themeToggleText.textContent = currentLabel;
+            themeToggle.setAttribute('aria-label', `Switch to ${nextTheme} mode`);
+            themeToggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+        };
+
+        applyTheme(root.getAttribute('data-theme') || 'dark');
+
+        themeToggle?.addEventListener('click', () => {
+            const nextTheme = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            localStorage.setItem('privacy-theme', nextTheme);
+            applyTheme(nextTheme);
+        });
 
         const setActiveLink = (id) => {
             navLinks.forEach((link) => {
