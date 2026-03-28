@@ -8,7 +8,10 @@
   },
   "permissions": [
     "storage",
-    "bookmarks"
+    "bookmarks",
+    "topSites",
+    "tabs",
+    "tabGroups"
   ],
   "icons": {
     "16": "icon.png",

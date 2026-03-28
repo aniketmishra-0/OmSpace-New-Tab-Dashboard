@@ -3,6 +3,28 @@
    =================================================================== */
 
 const STORAGE_KEY = 'omspace_state';
+const SYNC_STORAGE_KEY = 'omspace_sync_state';
+
+const DEFAULT_SEARCH_ENGINES = [
+    { id: 'google', name: 'Google', label: 'G', icon: 'search', url: 'https://www.google.com/search?q=' },
+    { id: 'youtube', name: 'YouTube', label: 'Y', icon: 'play_circle', url: 'https://www.youtube.com/results?search_query=' },
+    { id: 'duckduckgo', name: 'DuckDuckGo', label: 'D', icon: 'shield', url: 'https://duckduckgo.com/?q=' },
+    { id: 'bing', name: 'Bing', label: 'B', icon: 'language', url: 'https://www.bing.com/search?q=' }
+];
+
+const AI_ACTIONS = [
+    { id: 'summarize', icon: 'summarize', label: 'Summarize Clipboard', prompt: 'Summarize the following text into crisp bullet points:\n\n' },
+    { id: 'rewrite', icon: 'edit_note', label: 'Rewrite Better', prompt: 'Rewrite the following text to make it clearer and better structured:\n\n' },
+    { id: 'translate', icon: 'translate', label: 'Translate to English', prompt: 'Translate the following text to English and preserve meaning:\n\n' },
+    { id: 'extract', icon: 'fact_check', label: 'Action Items', prompt: 'Extract the action items from the following text:\n\n' }
+];
+
+const AI_PROVIDER_URLS = {
+    chatgpt: 'https://chatgpt.com',
+    gemini: 'https://gemini.google.com',
+    claude: 'https://claude.ai',
+    perplexity: 'https://www.perplexity.ai'
+};
 
 const QUOTES = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
@@ -47,8 +69,18 @@ const DEFAULT_STATE = {
     bgUrl: '',
     liveWallpaper: false,
     particles: true,
+    performanceMode: false,
+    syncEnabled: false,
+    zenMode: false,
     userName: '',
+    customGreeting: '',
+    customQuoteEnabled: false,
+    customQuoteText: '',
+    customQuoteAuthor: '',
     engine: 'google',
+    searchEngines: JSON.parse(JSON.stringify(DEFAULT_SEARCH_ENGINES)),
+    aiProvider: 'chatgpt',
+    weatherUnit: 'c',
     clockStyle: 'digital',
     showClock: true,
     showWeather: true,
@@ -66,12 +98,24 @@ const DEFAULT_STATE = {
     showReading: false,
     showBookmarks: true,
     showSocialDock: true,
+    showAgenda: true,
+    showTopSites: true,
+    showTabGroups: true,
+    showCustomWidgets: true,
+    showAiActions: true,
+    showPomoStats: true,
     bookmarkView: 'list',
+    bookmarkSource: 'recent',
+    notePreview: false,
+    restoreMode: 'all',
     todos: [],
     quickNote: '',
     focusGoal: '',
     focusDate: '',
     habits: [],
+    agendaItems: [],
+    customWidgets: [],
+    weatherCache: null,
     worldClocks: [
         { city: 'New York', tz: 'America/New_York' },
         { city: 'London', tz: 'Europe/London' },
@@ -82,6 +126,16 @@ const DEFAULT_STATE = {
     readingList: [],
     pomoSessions: 0,
     pomoSessionDate: '',
+    pomoHistory: {},
+    shortcutsConfig: {
+        search: '/',
+        help: '?',
+        theme: 't',
+        pomo: 'p',
+        settings: 's'
+    },
+    activeProfile: 'personal',
+    profileStates: {},
     shortcuts: [
         { name: 'Gmail', url: 'https://gmail.com', icon: 'mail' },
         { name: 'YouTube', url: 'https://youtube.com', icon: 'play_circle' },
@@ -123,13 +177,11 @@ let pomoIsWork = true;
 let currentEditMode = null;
 let particlesAnimId = null;
 let restartParticlesAnimation = null;
-
-const ENGINES = {
-    google: { url: 'https://www.google.com/search?q=', label: 'G' },
-    youtube: { url: 'https://www.youtube.com/results?search_query=', label: 'Y' },
-    duckduckgo: { url: 'https://duckduckgo.com/?q=', label: 'D' },
-    bing: { url: 'https://www.bing.com/search?q=', label: 'B' }
-};
+let draggedTodoId = null;
+let currentCreateMode = null;
+let currentCreateDefaults = {};
+let activeSettingsTab = 'look';
+const toastTimeouts = new Map();
 
 const BG_PRESETS = {
     gradient: '',
@@ -141,15 +193,360 @@ const BG_PRESETS = {
     minimal: 'https://images.unsplash.com/photo-1622737133809-d95047b9e673?q=80&w=2560&auto=format&fit=crop'
 };
 
+const CREATE_MODAL_CONFIGS = {
+    habit: {
+        title: 'Add Habit',
+        subtitle: 'Create a simple daily habit you can track from the card.',
+        submitLabel: 'Add Habit',
+        fields: [
+            { id: 'name', label: 'Habit Name', type: 'text', placeholder: 'Drink water', required: true, helper: 'Keep it short and action-oriented.' }
+        ]
+    },
+    worldClock: {
+        title: 'Add World Clock',
+        subtitle: 'Pin another city and timezone to your dashboard.',
+        submitLabel: 'Add Clock',
+        fields: [
+            { id: 'city', label: 'City', type: 'text', placeholder: 'Dubai', required: true },
+            { id: 'tz', label: 'Timezone', type: 'text', placeholder: 'Asia/Dubai', required: true, helper: 'Use an IANA timezone like Europe/Paris or America/New_York.' }
+        ]
+    },
+    customWidget: {
+        title: 'Add Custom Widget',
+        subtitle: 'Create a mini card for reminders, links, or quick snippets.',
+        submitLabel: 'Add Widget',
+        fields: [
+            { id: 'title', label: 'Title', type: 'text', placeholder: 'Resources', required: true },
+            { id: 'content', label: 'Content', type: 'textarea', placeholder: 'Useful links, notes, or reminders...' },
+            { id: 'link', label: 'Optional Link', type: 'text', placeholder: 'https://example.com' },
+            { id: 'icon', label: 'Material Symbol Icon', type: 'text', placeholder: 'widgets', helper: 'Examples: widgets, bolt, link, code.' }
+        ]
+    }
+};
+
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => document.querySelectorAll(s);
+
+const clone = (value) => JSON.parse(JSON.stringify(value));
+
+function hasSearchEngine(engineId, engines = state.searchEngines) {
+    return Array.isArray(engines) && engines.some(engine => engine.id === engineId);
+}
+
+function normalizeStateShape(source = {}) {
+    const nextState = { ...clone(DEFAULT_STATE), ...clone(source) };
+
+    if (!Array.isArray(nextState.searchEngines) || !nextState.searchEngines.length) nextState.searchEngines = clone(DEFAULT_SEARCH_ENGINES);
+    nextState.searchEngines = nextState.searchEngines
+        .map((engine, index) => ({
+            id: engine?.id || engine?.name?.toLowerCase().replace(/[^a-z0-9]+/g, '-') || `engine-${index}`,
+            name: engine?.name || `Engine ${index + 1}`,
+            label: engine?.label || (engine?.name || 'S').trim().charAt(0).toUpperCase(),
+            icon: engine?.icon || 'search',
+            url: engine?.url || DEFAULT_SEARCH_ENGINES[0].url
+        }))
+        .filter(engine => engine.name && engine.url);
+    if (!nextState.searchEngines.length) nextState.searchEngines = clone(DEFAULT_SEARCH_ENGINES);
+
+    if (!Array.isArray(nextState.shortcuts)) nextState.shortcuts = clone(DEFAULT_STATE.shortcuts);
+    if (!Array.isArray(nextState.aiTools)) nextState.aiTools = clone(DEFAULT_STATE.aiTools);
+    if (!Array.isArray(nextState.socialLinks)) nextState.socialLinks = clone(DEFAULT_STATE.socialLinks);
+    if (!Array.isArray(nextState.todos)) nextState.todos = [];
+    nextState.todos = nextState.todos.map((todo, index) => ({
+        priority: 'normal',
+        dueDate: '',
+        order: index + 1,
+        ...todo
+    }));
+    if (!Array.isArray(nextState.habits)) nextState.habits = [];
+    nextState.habits = nextState.habits.map(habit => ({
+        ...habit,
+        history: Array.isArray(habit.history) ? habit.history : []
+    }));
+    if (!Array.isArray(nextState.worldClocks)) nextState.worldClocks = clone(DEFAULT_STATE.worldClocks);
+    if (!Array.isArray(nextState.readingList)) nextState.readingList = [];
+    if (!Array.isArray(nextState.agendaItems)) nextState.agendaItems = [];
+    if (!Array.isArray(nextState.customWidgets)) nextState.customWidgets = [];
+    if (!nextState.shortcutsConfig || typeof nextState.shortcutsConfig !== 'object') nextState.shortcutsConfig = clone(DEFAULT_STATE.shortcutsConfig);
+    else nextState.shortcutsConfig = { ...clone(DEFAULT_STATE.shortcutsConfig), ...nextState.shortcutsConfig };
+    if (!nextState.pomoHistory || typeof nextState.pomoHistory !== 'object') nextState.pomoHistory = {};
+    if (!nextState.weatherUnit) nextState.weatherUnit = 'c';
+    if (!nextState.aiProvider) nextState.aiProvider = 'chatgpt';
+    if (!nextState.bookmarkSource) nextState.bookmarkSource = 'recent';
+    if (nextState.layoutLocked === undefined) nextState.layoutLocked = true;
+    if (!hasSearchEngine(nextState.engine, nextState.searchEngines)) nextState.engine = nextState.searchEngines[0]?.id || DEFAULT_SEARCH_ENGINES[0].id;
+
+    const existingUrls = new Set(nextState.socialLinks.map(link => link.url));
+    DEFAULT_STATE.socialLinks.forEach(defLink => {
+        if (!existingUrls.has(defLink.url)) nextState.socialLinks.push({ ...defLink });
+    });
+
+    return nextState;
+}
+
+function getSearchEngine(engineId) {
+    return (state.searchEngines || []).find(engine => engine.id === engineId) || (state.searchEngines || [])[0] || DEFAULT_SEARCH_ENGINES[0];
+}
+
+function canUseChromeStorageSync() {
+    return typeof chrome !== 'undefined' && chrome.storage && chrome.storage.sync;
+}
+
+function chromeStorageGet(area, key) {
+    return new Promise(resolve => {
+        try {
+            area.get([key], result => resolve(result || {}));
+        } catch {
+            resolve({});
+        }
+    });
+}
+
+function chromeStorageSet(area, value) {
+    return new Promise(resolve => {
+        try {
+            area.set(value, () => resolve());
+        } catch {
+            resolve();
+        }
+    });
+}
+
+function buildDefaultProfile(profileId) {
+    const base = clone(DEFAULT_STATE);
+    delete base.profileStates;
+    delete base.activeProfile;
+    delete base.syncEnabled;
+    if (profileId === 'work') {
+        base.showTodo = true;
+        base.showAgenda = true;
+        base.showNotes = true;
+        base.showFocus = true;
+        base.showPomodoro = true;
+        base.showBookmarks = true;
+        base.showTabGroups = true;
+        base.showTopSites = false;
+    } else if (profileId === 'minimal') {
+        base.showWeather = false;
+        base.showAi = false;
+        base.showGapps = false;
+        base.showNotes = false;
+        base.showHabits = false;
+        base.showWorldclock = false;
+        base.showReading = false;
+        base.showBookmarks = false;
+        base.showSocialDock = false;
+        base.showTopSites = false;
+        base.showTabGroups = false;
+        base.showCustomWidgets = false;
+        base.showAiActions = false;
+        base.showBottomWidgets = false;
+        base.showQuote = false;
+        base.showFocus = true;
+        base.showPomodoro = true;
+        base.showTodo = true;
+    }
+    return base;
+}
+
+function extractProfileState(source = state) {
+    const snapshot = clone(source);
+    delete snapshot.profileStates;
+    delete snapshot.activeProfile;
+    delete snapshot.syncEnabled;
+    return snapshot;
+}
+
+function ensureProfileStates() {
+    const currentSnapshot = extractProfileState({ ...clone(DEFAULT_STATE), ...state });
+    if (!state.profileStates || typeof state.profileStates !== 'object') state.profileStates = {};
+    if (!state.profileStates.personal) state.profileStates.personal = currentSnapshot;
+    if (!state.profileStates.work) state.profileStates.work = buildDefaultProfile('work');
+    if (!state.profileStates.minimal) state.profileStates.minimal = buildDefaultProfile('minimal');
+    if (!state.activeProfile || !state.profileStates[state.activeProfile]) state.activeProfile = 'personal';
+}
+
+function buildSyncState() {
+    return {
+        accent: state.accent,
+        theme: state.theme,
+        font: state.font,
+        engine: state.engine,
+        searchEngines: clone(state.searchEngines || DEFAULT_SEARCH_ENGINES),
+        weatherUnit: state.weatherUnit,
+        performanceMode: state.performanceMode,
+        zenMode: state.zenMode,
+        clockStyle: state.clockStyle,
+        use24Hour: state.use24Hour,
+        layoutLocked: state.layoutLocked,
+        userName: state.userName,
+        customGreeting: state.customGreeting,
+        customQuoteEnabled: state.customQuoteEnabled,
+        customQuoteText: state.customQuoteText,
+        customQuoteAuthor: state.customQuoteAuthor,
+        aiProvider: state.aiProvider,
+        shortcutsConfig: clone(state.shortcutsConfig || DEFAULT_STATE.shortcutsConfig),
+        activeProfile: state.activeProfile,
+        showClock: state.showClock,
+        showWeather: state.showWeather,
+        showPomodoro: state.showPomodoro,
+        showFocus: state.showFocus,
+        showQuote: state.showQuote,
+        showShortcuts: state.showShortcuts,
+        showBottomWidgets: state.showBottomWidgets,
+        showAi: state.showAi,
+        showGapps: state.showGapps,
+        showTodo: state.showTodo,
+        showNotes: state.showNotes,
+        showHabits: state.showHabits,
+        showWorldclock: state.showWorldclock,
+        showReading: state.showReading,
+        showBookmarks: state.showBookmarks,
+        showSocialDock: state.showSocialDock,
+        showAgenda: state.showAgenda,
+        showTopSites: state.showTopSites,
+        showTabGroups: state.showTabGroups,
+        showCustomWidgets: state.showCustomWidgets,
+        showAiActions: state.showAiActions,
+        showPomoStats: state.showPomoStats
+    };
+}
+
+async function syncCoreState() {
+    if (!state.syncEnabled || !canUseChromeStorageSync()) return;
+    await chromeStorageSet(chrome.storage.sync, { [SYNC_STORAGE_KEY]: buildSyncState() });
+}
+
+function showToast(message, type = 'info', title = '') {
+    const region = $('#toast-region');
+    if (!region) return;
+    const tone = ['success', 'error', 'info'].includes(type) ? type : 'info';
+    const toastId = uid();
+    const icon = tone === 'success' ? 'check_circle' : tone === 'error' ? 'error' : 'info';
+    const heading = title || (tone === 'success' ? 'Done' : tone === 'error' ? 'Action failed' : 'Heads up');
+    const toast = document.createElement('div');
+    toast.className = `toast ${tone}`;
+    toast.dataset.toastId = toastId;
+    toast.innerHTML = `
+        <div class="toast-icon"><span class="material-symbols-rounded">${icon}</span></div>
+        <div class="toast-body">
+            <div class="toast-title">${esc(heading)}</div>
+            <div class="toast-message">${esc(message)}</div>
+        </div>
+        <button class="toast-close" aria-label="Dismiss"><span class="material-symbols-rounded">close</span></button>
+    `;
+    toast.querySelector('.toast-close')?.addEventListener('click', () => dismissToast(toastId));
+    region.appendChild(toast);
+    const timeout = window.setTimeout(() => dismissToast(toastId), tone === 'error' ? 4200 : 2600);
+    toastTimeouts.set(toastId, timeout);
+}
+
+function dismissToast(toastId) {
+    const toast = $(`.toast[data-toast-id="${toastId}"]`);
+    if (!toast) return;
+    const timer = toastTimeouts.get(toastId);
+    if (timer) {
+        clearTimeout(timer);
+        toastTimeouts.delete(toastId);
+    }
+    toast.style.animation = 'toastOut .18s ease forwards';
+    window.setTimeout(() => toast.remove(), 180);
+}
+
+function setSettingsTab(tabId = activeSettingsTab, { resetScroll = false } = {}) {
+    const tabs = $$('.settings-tab-btn');
+    const availableTabs = [...tabs].map(btn => btn.dataset.settingsTabBtn);
+    activeSettingsTab = availableTabs.includes(tabId) ? tabId : availableTabs[0] || 'look';
+    tabs.forEach(btn => btn.classList.toggle('active', btn.dataset.settingsTabBtn === activeSettingsTab));
+    $$('.setting-section[data-settings-tab]').forEach(section => {
+        section.hidden = section.dataset.settingsTab !== activeSettingsTab;
+    });
+    const body = $('#settings-panel .settings-body');
+    if (body && resetScroll) body.scrollTop = 0;
+}
+
+function openSettingsPanel(tabId = activeSettingsTab) {
+    setSettingsTab(tabId, { resetScroll: true });
+    $('#settings-panel')?.classList.add('open');
+    $('#settings-backdrop')?.classList.add('visible');
+}
+
+function renderCreateModalField(field, value = '') {
+    const helper = field.helper ? `<div class="form-helper">${esc(field.helper)}</div>` : '';
+    if (field.type === 'textarea') {
+        return `
+            <div class="form-field">
+                <label for="create-field-${esc(field.id)}">${esc(field.label)}</label>
+                <textarea id="create-field-${esc(field.id)}" data-create-field="${esc(field.id)}" placeholder="${esc(field.placeholder || '')}" ${field.required ? 'required' : ''}>${esc(value)}</textarea>
+                ${helper}
+            </div>
+        `;
+    }
+    return `
+        <div class="form-field">
+            <label for="create-field-${esc(field.id)}">${esc(field.label)}</label>
+            <input id="create-field-${esc(field.id)}" data-create-field="${esc(field.id)}" type="${esc(field.type || 'text')}" value="${esc(value)}" placeholder="${esc(field.placeholder || '')}" ${field.required ? 'required' : ''}>
+            ${helper}
+        </div>
+    `;
+}
+
+function openCreateModal(mode, defaults = {}) {
+    const config = CREATE_MODAL_CONFIGS[mode];
+    if (!config) return;
+    currentCreateMode = mode;
+    currentCreateDefaults = defaults;
+    updateEl('#create-modal-title', config.title);
+    updateEl('#create-modal-subtitle', config.subtitle);
+    const saveBtn = $('#create-modal-save');
+    if (saveBtn) saveBtn.innerHTML = `<span class="material-symbols-rounded">check</span> ${esc(config.submitLabel)}`;
+    const fields = $('#create-modal-fields');
+    if (fields) {
+        fields.innerHTML = config.fields.map(field => renderCreateModalField(field, defaults[field.id] || '')).join('');
+    }
+    $('#create-modal')?.classList.add('open');
+    $('#create-modal-backdrop')?.classList.add('visible');
+    window.setTimeout(() => {
+        $('#create-modal-form [data-create-field]')?.focus();
+    }, 20);
+}
+
+function closeCreateModal() {
+    currentCreateMode = null;
+    currentCreateDefaults = {};
+    $('#create-modal')?.classList.remove('open');
+    $('#create-modal-backdrop')?.classList.remove('visible');
+    $('#create-modal-form')?.reset();
+    const fields = $('#create-modal-fields');
+    if (fields) fields.innerHTML = '';
+}
+
+function getCreateModalValues() {
+    const values = {};
+    $$('#create-modal-form [data-create-field]').forEach(field => {
+        values[field.dataset.createField] = field.value.trim();
+    });
+    return values;
+}
+
+function submitCreateModal() {
+    if (!currentCreateMode) return;
+    const values = getCreateModalValues();
+    if (currentCreateMode === 'habit') {
+        addHabit(values);
+    } else if (currentCreateMode === 'worldClock') {
+        addWorldClock(values);
+    } else if (currentCreateMode === 'customWidget') {
+        addCustomWidget(values);
+    }
+}
 
 
 // ═══════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════
-function init() {
-    loadState();
+async function init() {
+    await loadState();
     renderAll();
     startClock();
     if (state.showWeather) fetchWeather();
@@ -161,34 +558,30 @@ function init() {
 // ═══════════════════════════════════════
 // STORAGE
 // ═══════════════════════════════════════
-function loadState() {
+async function loadState() {
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (raw) {
-            state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...JSON.parse(raw) };
-            if (!Array.isArray(state.shortcuts)) state.shortcuts = [...DEFAULT_STATE.shortcuts];
-            if (!Array.isArray(state.aiTools)) state.aiTools = [...DEFAULT_STATE.aiTools];
-            if (!Array.isArray(state.socialLinks)) state.socialLinks = [...DEFAULT_STATE.socialLinks];
-            // Merge any new default social links the user doesn't have yet
-            const existingUrls = new Set(state.socialLinks.map(l => l.url));
-            DEFAULT_STATE.socialLinks.forEach(defLink => {
-                if (!existingUrls.has(defLink.url)) state.socialLinks.push({ ...defLink });
-            });
-            if (!Array.isArray(state.todos)) state.todos = [];
-            if (!Array.isArray(state.habits)) state.habits = [];
-            if (!Array.isArray(state.worldClocks)) state.worldClocks = [...DEFAULT_STATE.worldClocks];
-            if (!Array.isArray(state.readingList)) state.readingList = [];
-            if (state.layoutLocked === undefined) state.layoutLocked = true;
+            state = normalizeStateShape(JSON.parse(raw));
+        } else if (canUseChromeStorageSync()) {
+            const synced = await chromeStorageGet(chrome.storage.sync, SYNC_STORAGE_KEY);
+            state = normalizeStateShape(synced[SYNC_STORAGE_KEY] || {});
         } else {
-            state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+            state = normalizeStateShape();
         }
+        ensureProfileStates();
     } catch (e) {
-        state = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        state = normalizeStateShape();
+        ensureProfileStates();
     }
 }
 
 function saveState() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    ensureProfileStates();
+    const persistState = clone(state);
+    persistState.profileStates[state.activeProfile] = extractProfileState(state);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(persistState));
+    void syncCoreState();
 }
 
 // ═══════════════════════════════════════
@@ -198,9 +591,14 @@ function renderAll() {
     applyThemeMode();
     applyAccent();
     applyFont();
+    applyPerformanceMode();
+    applyZenMode();
     applyBackground();
     applyVisibility();
     applyClockStyle();
+    hydrateWeatherCard();
+    renderProfileBar();
+    renderSearchEngines();
     renderShortcuts();
     renderAiTools();
     renderTodos();
@@ -208,11 +606,18 @@ function renderAll() {
     renderHabits();
     renderWorldClocks();
     renderReadingList();
+    renderAgenda();
+    renderTopSites();
+    renderTabGroups();
+    renderCustomWidgets();
+    renderQuickActions();
     renderFocus();
     renderQuote();
     syncSettingsUI();
     loadQuickNote();
     updatePomoDisplay();
+    renderPomoStats();
+    renderKeyboardShortcutUI();
     applyParticles();
     if (state.showBottomWidgets) initBottomWidgets();
     renderSocialDock();
@@ -233,6 +638,39 @@ function toggleTheme() {
     state.theme = state.theme === 'dark' ? 'light' : 'dark';
     saveState();
     applyThemeMode();
+}
+
+function applyPerformanceMode() {
+    document.body.classList.toggle('performance-mode', !!state.performanceMode);
+}
+
+function applyZenMode() {
+    document.body.classList.toggle('zen-mode', !!state.zenMode);
+    $('#zen-toggle-btn')?.classList.toggle('active', !!state.zenMode);
+}
+
+function renderProfileBar() {
+    $$('.profile-chip').forEach(btn => btn.classList.toggle('active', btn.dataset.profile === state.activeProfile));
+}
+
+function switchProfile(profileId) {
+    if (!state.profileStates?.[profileId]) return;
+    state.profileStates[state.activeProfile] = extractProfileState(state);
+    const profileSnapshot = normalizeStateShape(state.profileStates[profileId]);
+    const syncEnabled = state.syncEnabled;
+    state = { ...clone(DEFAULT_STATE), ...profileSnapshot, profileStates: state.profileStates, activeProfile: profileId, syncEnabled };
+    ensureProfileStates();
+    renderAll();
+    if (state.showWeather && !state.weatherCache) fetchWeather();
+    saveState();
+}
+
+function renderKeyboardShortcutUI() {
+    updateEl('#shortcut-search-kbd', (state.shortcutsConfig.search || '/').toUpperCase());
+    updateEl('#shortcut-help-kbd', (state.shortcutsConfig.help || '?').toUpperCase());
+    updateEl('#shortcut-theme-kbd', (state.shortcutsConfig.theme || 't').toUpperCase());
+    updateEl('#shortcut-pomo-kbd', (state.shortcutsConfig.pomo || 'p').toUpperCase());
+    updateEl('#shortcut-settings-kbd', (state.shortcutsConfig.settings || 's').toUpperCase());
 }
 
 // ═══════════════════════════════════════
@@ -273,7 +711,7 @@ function applyBackground() {
     bg.classList.remove('gradient-bg');
 
     // Live wallpaper overrides everything
-    if (state.liveWallpaper) {
+    if (state.liveWallpaper && !state.performanceMode) {
         const seed = new Date().toISOString().split('T')[0];
         bg.style.backgroundImage = `url('https://source.unsplash.com/1920x1080/?nature,landscape&${seed}')`;
         return;
@@ -307,6 +745,12 @@ function applyVisibility() {
     toggleWidget('#worldclock-card', state.showWorldclock);
     toggleWidget('#reading-card', state.showReading);
     toggleWidget('#bookmarks-card', state.showBookmarks);
+    toggleWidget('#agenda-card', state.showAgenda);
+    toggleWidget('#top-sites-card', state.showTopSites);
+    toggleWidget('#tab-groups-card', state.showTabGroups);
+    toggleWidget('#custom-widgets-card', state.showCustomWidgets);
+    toggleWidget('#ai-actions-card', state.showAiActions);
+    toggleWidget('#pomo-stats-card', state.showPomoStats);
     toggleWidget('.bottom-widgets-section', state.showBottomWidgets);
     toggleWidget('#social-dock', state.showSocialDock);
 }
@@ -351,7 +795,8 @@ function updateClock() {
     if (h < 12) { greetText = 'Good Morning'; emoji = '☕️'; }
     else if (h < 18) { greetText = 'Good Afternoon'; emoji = '☀️'; }
     
-    let greet = state.userName ? `${greetText}, ${state.userName}! ${emoji}` : `${greetText}! ${emoji}`;
+    const baseGreeting = state.customGreeting?.trim() || greetText;
+    let greet = state.userName ? `${baseGreeting}, ${state.userName}! ${emoji}` : `${baseGreeting}! ${emoji}`;
 
     // Digital
     const hDisplay = state.use24Hour ? (h < 10 ? '0' + h : h) : (h % 12 || 12);
@@ -408,7 +853,37 @@ function updateClock() {
 // ═══════════════════════════════════════
 // WEATHER
 // ═══════════════════════════════════════
-function fetchWeather() {
+function renderWeatherFromCache(cache) {
+    if (!cache) return;
+    updateEl('#weather-temp', cache.temp);
+    updateEl('#weather-feels', cache.feels);
+    updateEl('#weather-humidity', cache.humidity);
+    updateEl('#weather-wind', cache.wind);
+    updateEl('#weather-cond', cache.condition);
+    updateEl('#weather-icon-main', cache.icon);
+    updateEl('#weather-city', cache.city);
+}
+
+function hydrateWeatherCard() {
+    if (!state.showWeather) return;
+    if (state.weatherCache) {
+        renderWeatherFromCache(state.weatherCache);
+        return;
+    }
+    updateEl('#weather-cond', state.performanceMode ? 'Performance mode' : 'Detecting weather...');
+    updateEl('#weather-city', state.performanceMode ? 'Refresh manually' : 'Detecting location...');
+}
+
+function fetchWeather(force = false) {
+    if (state.performanceMode && !force) {
+        if (state.weatherCache) {
+            renderWeatherFromCache(state.weatherCache);
+        } else {
+            updateEl('#weather-cond', 'Performance mode');
+            updateEl('#weather-city', 'Refresh manually');
+        }
+        return;
+    }
     if (!navigator.geolocation) {
         updateEl('#weather-cond', 'No geolocation');
         updateEl('#weather-city', 'N/A');
@@ -416,7 +891,9 @@ function fetchWeather() {
     }
     navigator.geolocation.getCurrentPosition(pos => {
         const { latitude: lat, longitude: lon } = pos.coords;
-        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&temperature_unit=celsius`)
+        const tempUnit = state.weatherUnit === 'f' ? 'fahrenheit' : 'celsius';
+        const windUnit = state.weatherUnit === 'f' ? 'mph' : 'kmh';
+        fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m&temperature_unit=${tempUnit}&wind_speed_unit=${windUnit}`)
             .then(r => r.json())
             .then(data => {
                 const c = data.current;
@@ -426,12 +903,19 @@ function fetchWeather() {
                 const hum = c.relative_humidity_2m;
                 const wind = Math.round(c.wind_speed_10m);
                 const { text, icon } = decodeWeather(c.weather_code);
-                updateEl('#weather-temp', `${temp}°C`);
-                updateEl('#weather-feels', `${feels}°C`);
-                updateEl('#weather-humidity', `${hum}%`);
-                updateEl('#weather-wind', `${wind} km/h`);
-                updateEl('#weather-cond', text);
-                updateEl('#weather-icon-main', icon);
+                const unit = state.weatherUnit === 'f' ? 'F' : 'C';
+                const windLabel = state.weatherUnit === 'f' ? 'mph' : 'km/h';
+                state.weatherCache = {
+                    temp: `${temp}°${unit}`,
+                    feels: `${feels}°${unit}`,
+                    humidity: `${hum}%`,
+                    wind: `${wind} ${windLabel}`,
+                    condition: text,
+                    icon,
+                    city: $('#weather-city')?.textContent || 'Detecting location...'
+                };
+                renderWeatherFromCache(state.weatherCache);
+                saveState();
             })
             .catch(() => updateEl('#weather-cond', 'Unavailable'));
 
@@ -440,7 +924,12 @@ function fetchWeather() {
             .then(data => {
                 const a = data.address || {};
                 const city = a.city || a.town || a.village || a.state_district || a.state || 'Unknown';
-                updateEl('#weather-city', `${city}, ${a.country || ''}`);
+                const cityText = `${city}, ${a.country || ''}`.trim();
+                updateEl('#weather-city', cityText);
+                if (state.weatherCache) {
+                    state.weatherCache.city = cityText;
+                    saveState();
+                }
             })
             .catch(() => updateEl('#weather-city', `${lat.toFixed(2)}°, ${lon.toFixed(2)}°`));
     }, () => {
@@ -514,8 +1003,11 @@ function togglePomo() {
                 if (pomoIsWork) {
                     state.pomoSessions++;
                     state.pomoSessionDate = new Date().toDateString();
+                    const historyKey = new Date().toISOString().split('T')[0];
+                    state.pomoHistory[historyKey] = (state.pomoHistory[historyKey] || 0) + 1;
                     saveState();
                     updateEl('#pomo-sessions', state.pomoSessions.toString());
+                    renderPomoStats();
                 }
                 pomoIsWork = !pomoIsWork;
                 pomoTimeLeft = pomoIsWork ? 25 * 60 : 5 * 60;
@@ -601,6 +1093,11 @@ function clearFocus() {
 // QUOTE OF THE DAY
 // ═══════════════════════════════════════
 async function renderQuote() {
+    if (state.customQuoteEnabled && state.customQuoteText.trim()) {
+        updateEl('#quote-text', `"${state.customQuoteText.trim()}"`);
+        updateEl('#quote-author', state.customQuoteAuthor.trim() ? `— ${state.customQuoteAuthor.trim()}` : '— You');
+        return;
+    }
     const today = new Date().toDateString();
     const cachedDate = localStorage.getItem('omspace_quote_date');
     const cachedText = localStorage.getItem('omspace_quote_text');
@@ -613,6 +1110,7 @@ async function renderQuote() {
     }
 
     try {
+        if (state.performanceMode) throw new Error('Performance mode');
         const res = await fetch('https://dummyjson.com/quotes/random?minlength=20&maxlength=85');
         if (!res.ok) throw new Error('Network error');
         const data = await res.json();
@@ -639,7 +1137,8 @@ function performSearch() {
     const input = $('#search-input');
     const q = input?.value.trim();
     if (!q) return;
-    window.location.href = ENGINES[state.engine].url + encodeURIComponent(q);
+    const engine = getSearchEngine(state.engine);
+    window.location.href = engine.url + encodeURIComponent(q);
 }
 
 function setEngine(engine) {
@@ -648,9 +1147,21 @@ function setEngine(engine) {
     updateEngineUI();
 }
 
+function renderSearchEngines() {
+    const strip = $('#engine-strip');
+    if (!strip) return;
+    strip.innerHTML = (state.searchEngines || []).map(engine => `
+        <button class="engine-chip ${engine.id === state.engine ? 'active' : ''}" data-engine="${esc(engine.id)}">
+            <span class="material-symbols-rounded">${esc(engine.icon || 'search')}</span> ${esc(engine.name)}
+        </button>
+    `).join('');
+    updateEngineUI();
+}
+
 function updateEngineUI() {
     $$('.engine-chip').forEach(b => b.classList.toggle('active', b.dataset.engine === state.engine));
-    updateEl('#engine-label', ENGINES[state.engine].label);
+    const engine = getSearchEngine(state.engine);
+    updateEl('#engine-label', engine.label);
 }
 
 // ═══════════════════════════════════════
@@ -770,14 +1281,21 @@ function renderTodos() {
     const list = $('#todo-list');
     if (!list) return;
     const sorted = [...state.todos].sort((a, b) => {
-        if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
         if (a.completed !== b.completed) return a.completed ? 1 : -1;
-        return 0;
+        if (a.pinned !== b.pinned) return b.pinned ? 1 : -1;
+        return (a.order || 0) - (b.order || 0);
     });
     list.innerHTML = sorted.map(t => `
-        <li class="todo-item ${t.completed ? 'completed' : ''} ${t.pinned ? 'pinned' : ''}" data-id="${t.id}">
+        <li class="todo-item ${t.completed ? 'completed' : ''} ${t.pinned ? 'pinned' : ''}" data-id="${t.id}" draggable="true">
+            <button class="todo-drag" data-action="drag" data-id="${t.id}"><span class="material-symbols-rounded">drag_indicator</span></button>
             <div class="todo-checkbox" data-action="toggle" data-id="${t.id}"></div>
-            <span class="todo-text">${esc(t.text)}</span>
+            <div class="todo-content">
+                <span class="todo-text">${esc(t.text)}</span>
+                <div class="todo-meta">
+                    ${t.priority && t.priority !== 'normal' ? `<span class="todo-pill ${esc(t.priority)}">${esc(t.priority)}</span>` : ''}
+                    ${t.dueDate ? `<span class="todo-pill">${esc(formatDateLabel(t.dueDate))}</span>` : ''}
+                </div>
+            </div>
             <button class="todo-pin" data-action="pin" data-id="${t.id}"><span class="material-symbols-rounded">push_pin</span></button>
             <button class="todo-delete" data-action="delete" data-id="${t.id}"><span class="material-symbols-rounded">close</span></button>
         </li>`).join('');
@@ -786,10 +1304,37 @@ function renderTodos() {
 
 function addTodo() {
     const input = $('#todo-input');
+    const dueInput = $('#todo-date-input');
+    const priorityInput = $('#todo-priority-input');
     const text = input?.value.trim();
     if (!text) return;
-    state.todos.push({ id: uid(), text, completed: false, pinned: false });
+    const nextOrder = state.todos.reduce((max, todo) => Math.max(max, todo.order || 0), 0) + 1;
+    state.todos.push({
+        id: uid(),
+        text,
+        completed: false,
+        pinned: false,
+        dueDate: dueInput?.value || '',
+        priority: priorityInput?.value || 'normal',
+        order: nextOrder
+    });
     input.value = '';
+    if (dueInput) dueInput.value = '';
+    if (priorityInput) priorityInput.value = 'normal';
+    saveState();
+    renderTodos();
+}
+
+function reorderTodo(draggedId, targetId) {
+    if (!draggedId || !targetId || draggedId === targetId) return;
+    const sorted = [...state.todos].sort((a, b) => (a.order || 0) - (b.order || 0));
+    const draggedIndex = sorted.findIndex(todo => todo.id === draggedId);
+    const targetIndex = sorted.findIndex(todo => todo.id === targetId);
+    if (draggedIndex === -1 || targetIndex === -1) return;
+    const [dragged] = sorted.splice(draggedIndex, 1);
+    sorted.splice(targetIndex, 0, dragged);
+    sorted.forEach((todo, index) => { todo.order = index + 1; });
+    state.todos = sorted;
     saveState();
     renderTodos();
 }
@@ -800,11 +1345,64 @@ function addTodo() {
 function loadQuickNote() {
     const area = $('#quick-note');
     if (area) area.value = state.quickNote || '';
+    renderQuickNotePreview();
+    if (area) area.style.display = state.notePreview ? 'none' : 'block';
+    const preview = $('#quick-note-preview');
+    if (preview) preview.style.display = state.notePreview ? 'block' : 'none';
 }
 
 function saveQuickNote() {
     const area = $('#quick-note');
-    if (area) { state.quickNote = area.value; saveState(); }
+    if (area) {
+        state.quickNote = area.value;
+        saveState();
+        renderQuickNotePreview();
+    }
+}
+
+function renderQuickNotePreview() {
+    const preview = $('#quick-note-preview');
+    if (!preview) return;
+    const lines = (state.quickNote || '').split('\n');
+    const html = lines.map((line, index) => {
+        if (!line.trim()) return '<br>';
+        if (/^###\s+/.test(line)) return `<h3>${formatInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`;
+        if (/^##\s+/.test(line)) return `<h2>${formatInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`;
+        if (/^#\s+/.test(line)) return `<h1>${formatInlineMarkdown(line.replace(/^#\s+/, ''))}</h1>`;
+        const checklistMatch = line.match(/^- \[( |x)\] (.*)$/i);
+        if (checklistMatch) {
+            const done = checklistMatch[1].toLowerCase() === 'x';
+            return `<div class="note-check-item ${done ? 'done' : ''}" data-line="${index}">
+                <span class="note-check-box">${done ? '✓' : ''}</span>
+                <span class="note-check-label">${formatInlineMarkdown(checklistMatch[2])}</span>
+            </div>`;
+        }
+        if (/^- /.test(line)) return `<ul><li>${formatInlineMarkdown(line.replace(/^- /, ''))}</li></ul>`;
+        return `<p>${formatInlineMarkdown(line)}</p>`;
+    }).join('');
+    preview.innerHTML = html || '<p>No preview yet.</p>';
+}
+
+function formatInlineMarkdown(text) {
+    let html = esc(text);
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+    html = html.replace(/\[(.+?)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    return html;
+}
+
+function toggleQuickNoteChecklist(lineIndex) {
+    const area = $('#quick-note');
+    if (!area) return;
+    const lines = area.value.split('\n');
+    const line = lines[lineIndex];
+    if (!line) return;
+    lines[lineIndex] = line.includes('[x]') ? line.replace('[x]', '[ ]') : line.replace('[ ]', '[x]');
+    area.value = lines.join('\n');
+    state.quickNote = area.value;
+    saveState();
+    renderQuickNotePreview();
 }
 
 // ═══════════════════════════════════════
@@ -817,43 +1415,67 @@ function renderHabits() {
 
     list.innerHTML = state.habits.map((h, i) => {
         const doneToday = h.lastDone === today;
+        const history = getHabitHistoryDays(h);
         return `
         <div class="habit-item" data-idx="${i}">
             <span class="habit-name">${esc(h.name)}</span>
             <span class="habit-streak">🔥 ${h.streak || 0}</span>
             <div class="habit-check ${doneToday ? 'done' : ''}" data-hidx="${i}"></div>
             <button class="habit-delete" data-hidx="${i}"><span class="material-symbols-rounded">close</span></button>
+            <div class="habit-history">${history.map(day => `<span class="habit-day ${day.done ? 'done' : ''}" title="${esc(day.label)}"></span>`).join('')}</div>
         </div>`;
     }).join('');
 }
 
-function addHabit() {
-    const name = prompt('Enter habit name:');
-    if (!name || !name.trim()) return;
-    state.habits.push({ name: name.trim(), streak: 0, lastDone: '' });
+function addHabit(payload = {}) {
+    const name = payload.name?.trim();
+    if (!name) {
+        showToast('Habit name is required.', 'error', 'Missing field');
+        return;
+    }
+    state.habits.push({ name, streak: 0, lastDone: '', history: [] });
     saveState();
     renderHabits();
+    closeCreateModal();
+    showToast(`${name} added to habits.`, 'success', 'Habit created');
 }
 
 function toggleHabit(idx) {
     const h = state.habits[idx];
     if (!h) return;
     const today = new Date().toDateString();
+    if (!Array.isArray(h.history)) h.history = [];
     if (h.lastDone === today) {
         h.streak = Math.max(0, (h.streak || 0) - 1);
         h.lastDone = '';
+        h.history = h.history.filter(day => day !== today);
     } else {
         h.streak = (h.streak || 0) + 1;
         h.lastDone = today;
+        if (!h.history.includes(today)) h.history.push(today);
     }
     saveState();
     renderHabits();
 }
 
+function getHabitHistoryDays(habit) {
+    const days = [];
+    const history = new Set(habit.history || []);
+    for (let offset = 6; offset >= 0; offset--) {
+        const day = new Date();
+        day.setDate(day.getDate() - offset);
+        const label = day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        days.push({ label, done: history.has(day.toDateString()) });
+    }
+    return days;
+}
+
 function deleteHabit(idx) {
+    const habitName = state.habits[idx]?.name || 'Habit';
     state.habits.splice(idx, 1);
     saveState();
     renderHabits();
+    showToast(`${habitName} removed.`, 'info', 'Habit deleted');
 }
 
 // ═══════════════════════════════════════
@@ -889,20 +1511,32 @@ function updateWorldClockTimes() {
     });
 }
 
-function addWorldClock() {
-    const city = prompt('City name (e.g. Dubai):');
-    if (!city) return;
-    const tz = prompt('Timezone (e.g. Asia/Dubai, America/New_York, Europe/Paris):');
-    if (!tz) return;
-    state.worldClocks.push({ city: city.trim(), tz: tz.trim() });
+function addWorldClock(payload = {}) {
+    const city = payload.city?.trim();
+    const tz = payload.tz?.trim();
+    if (!city || !tz) {
+        showToast('City and timezone are both required.', 'error', 'Missing field');
+        return;
+    }
+    try {
+        new Intl.DateTimeFormat('en-US', { timeZone: tz }).format(new Date());
+    } catch {
+        showToast('Timezone format looks invalid. Use something like Asia/Dubai.', 'error', 'Invalid timezone');
+        return;
+    }
+    state.worldClocks.push({ city, tz });
     saveState();
     renderWorldClocks();
+    closeCreateModal();
+    showToast(`${city} clock added.`, 'success', 'World clock created');
 }
 
 function deleteWorldClock(idx) {
+    const city = state.worldClocks[idx]?.city || 'Clock';
     state.worldClocks.splice(idx, 1);
     saveState();
     renderWorldClocks();
+    showToast(`${city} removed.`, 'info', 'World clock deleted');
 }
 
 // ═══════════════════════════════════════
@@ -958,6 +1592,221 @@ function deleteReading(idx) {
 }
 
 // ═══════════════════════════════════════
+// AGENDA / EXTRA WIDGETS
+// ═══════════════════════════════════════
+function renderAgenda() {
+    const list = $('#agenda-list');
+    if (!list) return;
+    const items = [...state.agendaItems].sort((a, b) => new Date(a.date || 0) - new Date(b.date || 0));
+    if (!items.length) {
+        list.innerHTML = '<div class="agenda-item"><span class="material-symbols-rounded">event</span><div class="agenda-item-meta"><span class="agenda-item-title">No upcoming events</span><span class="agenda-item-date">Add one or open Google Calendar.</span></div></div>';
+        return;
+    }
+    list.innerHTML = items.map(item => `
+        <div class="agenda-item" data-id="${item.id}">
+            <span class="material-symbols-rounded">event_upcoming</span>
+            <div class="agenda-item-meta">
+                <span class="agenda-item-title">${esc(item.title)}</span>
+                <span class="agenda-item-date">${esc(formatDateTimeLabel(item.date))}</span>
+            </div>
+            <button class="reading-delete" data-action="delete-event" data-id="${item.id}"><span class="material-symbols-rounded">close</span></button>
+        </div>
+    `).join('');
+}
+
+function addAgendaItem() {
+    const titleInput = $('#event-title-input');
+    const dateInput = $('#event-date-input');
+    const title = titleInput?.value.trim();
+    const date = dateInput?.value;
+    if (!title || !date) {
+        showToast('Event title and date are required.', 'error', 'Missing field');
+        return;
+    }
+    state.agendaItems.push({ id: uid(), title, date });
+    titleInput.value = '';
+    dateInput.value = '';
+    saveState();
+    renderAgenda();
+    showToast(`${title} added to agenda.`, 'success', 'Event added');
+}
+
+function deleteAgendaItem(id) {
+    const title = state.agendaItems.find(item => item.id === id)?.title || 'Event';
+    state.agendaItems = state.agendaItems.filter(item => item.id !== id);
+    saveState();
+    renderAgenda();
+    showToast(`${title} removed from agenda.`, 'info', 'Event deleted');
+}
+
+function renderCustomWidgets() {
+    const list = $('#custom-widgets-list');
+    if (!list) return;
+    if (!state.customWidgets.length) {
+        list.innerHTML = '<div class="custom-widget-card"><div class="custom-widget-title"><span class="material-symbols-rounded">dashboard_customize</span> Add your first custom widget</div><div class="custom-widget-body">Use it for links, reminders, snippets, or tiny dashboards.</div></div>';
+        return;
+    }
+    list.innerHTML = state.customWidgets.map(widget => `
+        <div class="custom-widget-card" data-id="${widget.id}">
+            <div class="custom-widget-head">
+                <div class="custom-widget-title"><span class="material-symbols-rounded">${esc(widget.icon || 'widgets')}</span>${esc(widget.title)}</div>
+                <button class="reading-delete" data-action="delete-widget" data-id="${widget.id}"><span class="material-symbols-rounded">close</span></button>
+            </div>
+            <div class="custom-widget-body">${esc(widget.content || '')}</div>
+            ${widget.link ? `<a class="custom-widget-link" href="${esc(widget.link)}" target="_blank">Open link</a>` : ''}
+        </div>
+    `).join('');
+}
+
+function addCustomWidget(payload = {}) {
+    const title = payload.title?.trim();
+    if (!title) {
+        showToast('Widget title is required.', 'error', 'Missing field');
+        return;
+    }
+    const content = payload.content?.trim() || '';
+    const link = normalizeExternalUrl(payload.link || '');
+    const icon = payload.icon?.trim() || 'widgets';
+    state.customWidgets.push({ id: uid(), title, content, link, icon });
+    saveState();
+    renderCustomWidgets();
+    closeCreateModal();
+    showToast(`${title} widget created.`, 'success', 'Custom widget added');
+}
+
+function deleteCustomWidget(id) {
+    const title = state.customWidgets.find(widget => widget.id === id)?.title || 'Widget';
+    state.customWidgets = state.customWidgets.filter(widget => widget.id !== id);
+    saveState();
+    renderCustomWidgets();
+    showToast(`${title} removed.`, 'info', 'Widget deleted');
+}
+
+function renderQuickActions() {
+    const grid = $('#quick-actions-grid');
+    if (!grid) return;
+    grid.innerHTML = AI_ACTIONS.map(action => `
+        <button class="quick-action-btn" data-action-id="${action.id}">
+            <span class="material-symbols-rounded">${action.icon}</span>
+            <span>${action.label}</span>
+        </button>
+    `).join('');
+}
+
+async function runQuickAction(actionId, button) {
+    const action = AI_ACTIONS.find(item => item.id === actionId);
+    if (!action) return;
+    try {
+        window.open(AI_PROVIDER_URLS[state.aiProvider] || AI_PROVIDER_URLS.chatgpt, '_blank');
+        const clipboardText = await navigator.clipboard.readText();
+        const promptText = action.prompt + (clipboardText || 'No clipboard text found.');
+        await navigator.clipboard.writeText(promptText);
+        const original = button?.innerHTML;
+        if (button) button.innerHTML = '<span class="material-symbols-rounded">check</span><span>Copied</span>';
+        showToast('Prompt copied to clipboard. Paste it in your AI tab.', 'success', 'Quick action ready');
+        setTimeout(() => {
+            if (button && original) button.innerHTML = original;
+        }, 1200);
+    } catch {
+        showToast('Clipboard access failed. Please allow clipboard permission and try again.', 'error', 'Clipboard blocked');
+    }
+}
+
+function renderPomoStats() {
+    const chart = $('#pomo-stats-chart');
+    if (!chart) return;
+    const data = getRecentPomodoroStats();
+    const max = Math.max(1, ...data.map(item => item.count));
+    chart.innerHTML = data.map(item => `
+        <div class="pomo-bar">
+            <div class="pomo-bar-fill" style="height:${Math.max(8, (item.count / max) * 90)}px"></div>
+            <span class="pomo-bar-label">${esc(item.label)}</span>
+        </div>
+    `).join('');
+}
+
+function getRecentPomodoroStats() {
+    const history = state.pomoHistory || {};
+    const stats = [];
+    for (let offset = 6; offset >= 0; offset--) {
+        const day = new Date();
+        day.setDate(day.getDate() - offset);
+        const key = day.toISOString().split('T')[0];
+        stats.push({
+            label: day.toLocaleDateString(undefined, { weekday: 'short' }),
+            count: history[key] || 0
+        });
+    }
+    return stats;
+}
+
+function renderTopSites() {
+    const container = $('#top-sites-list');
+    if (!container) return;
+    if (typeof chrome !== 'undefined' && chrome.topSites) {
+        chrome.topSites.get(items => {
+            if (chrome.runtime?.lastError) {
+                renderBookmarkItems(container, state.shortcuts.slice(0, 8).map(item => ({ title: item.name, url: item.url })));
+                return;
+            }
+            renderBookmarkItems(container, items || []);
+        });
+    } else {
+        renderBookmarkItems(container, state.shortcuts.slice(0, 8).map(item => ({ title: item.name, url: item.url })));
+    }
+}
+
+function renderTabGroups() {
+    const list = $('#tab-groups-list');
+    if (!list) return;
+    if (!(typeof chrome !== 'undefined' && chrome.tabs && chrome.tabGroups)) {
+        list.innerHTML = '<div class="wc-item"><span class="wc-city">No tab groups API</span><span class="wc-time">Unavailable</span></div>';
+        return;
+    }
+    chrome.tabs.query({ currentWindow: true }, tabs => {
+        if (chrome.runtime?.lastError) {
+            list.innerHTML = '<div class="wc-item"><span class="wc-city">Tab groups unavailable</span><span class="wc-time">Error</span></div>';
+            return;
+        }
+        const grouped = [...new Set(tabs.map(tab => tab.groupId).filter(id => id >= 0))];
+        if (!grouped.length) {
+            list.innerHTML = '<div class="wc-item"><span class="wc-city">No tab groups</span><span class="wc-time">0</span></div>';
+            return;
+        }
+        Promise.all(grouped.map(groupId => new Promise(resolve => {
+            chrome.tabGroups.get(groupId, group => {
+                if (chrome.runtime?.lastError || !group) {
+                    resolve(null);
+                    return;
+                }
+                resolve({ groupId, group, tabs: tabs.filter(tab => tab.groupId === groupId) });
+            });
+        }))).then(groups => {
+            const visibleGroups = groups.filter(Boolean);
+            if (!visibleGroups.length) {
+                list.innerHTML = '<div class="wc-item"><span class="wc-city">No tab groups</span><span class="wc-time">0</span></div>';
+                return;
+            }
+            list.innerHTML = visibleGroups.map(entry => `
+                <button class="wc-item" data-action="focus-group" data-group-id="${entry.groupId}">
+                    <span class="wc-city">${esc(entry.group.title || `Group ${entry.groupId}`)}</span>
+                    <span class="wc-time">${entry.tabs.length} tabs</span>
+                </button>
+            `).join('');
+        });
+    });
+}
+
+function focusTabGroup(groupId) {
+    if (!(typeof chrome !== 'undefined' && chrome.tabs)) return;
+    chrome.tabs.query({ currentWindow: true }, tabs => {
+        const groupedTabs = tabs.filter(tab => tab.groupId === Number(groupId));
+        if (!groupedTabs.length) return;
+        chrome.tabs.highlight({ windowId: groupedTabs[0].windowId, tabs: groupedTabs.map(tab => tab.index) });
+    });
+}
+
+// ═══════════════════════════════════════
 // BOOKMARKS
 // ═══════════════════════════════════════
 function renderBookmarks() {
@@ -965,17 +1814,50 @@ function renderBookmarks() {
     if (!container) return;
     container.classList.toggle('grid-view', state.bookmarkView === 'grid');
     if (typeof chrome !== 'undefined' && chrome.bookmarks) {
-        chrome.bookmarks.getRecent(20, r => renderBookmarkItems(container, r));
+        if (state.bookmarkSource === 'folders') {
+            chrome.bookmarks.getTree(tree => renderBookmarkFolders(container, tree?.[0]?.children || []));
+        } else {
+            chrome.bookmarks.getRecent(20, r => renderBookmarkItems(container, r));
+        }
     } else {
-        renderBookmarkItems(container, [
-            { title: 'Google', url: 'https://google.com' },
-            { title: 'YouTube', url: 'https://youtube.com' },
-            { title: 'GitHub', url: 'https://github.com' },
-            { title: 'Gmail', url: 'https://gmail.com' },
-            { title: 'Stack Overflow', url: 'https://stackoverflow.com' },
-            { title: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
-        ]);
+        if (state.bookmarkSource === 'folders') {
+            renderBookmarkFolders(container, [{ title: 'Favorites', children: [
+                { title: 'Google', url: 'https://google.com' },
+                { title: 'YouTube', url: 'https://youtube.com' },
+                { title: 'GitHub', url: 'https://github.com' }
+            ] }]);
+        } else {
+            renderBookmarkItems(container, [
+                { title: 'Google', url: 'https://google.com' },
+                { title: 'YouTube', url: 'https://youtube.com' },
+                { title: 'GitHub', url: 'https://github.com' },
+                { title: 'Gmail', url: 'https://gmail.com' },
+                { title: 'Stack Overflow', url: 'https://stackoverflow.com' },
+                { title: 'MDN Web Docs', url: 'https://developer.mozilla.org' },
+            ]);
+        }
     }
+}
+
+function renderBookmarkFolders(container, items) {
+    const folders = items.filter(item => Array.isArray(item.children) && item.children.length);
+    container.classList.remove('grid-view');
+    container.innerHTML = folders.slice(0, 8).map(folder => `
+        <div class="bookmark-folder">
+            <div class="bookmark-folder-title"><span class="material-symbols-rounded">folder</span>${esc(folder.title || 'Folder')}</div>
+            <div class="bookmark-folder-children">
+                ${(folder.children || []).filter(child => child.url).slice(0, 5).map(child => `
+                    <a href="${esc(child.url)}" class="bookmark-item" title="${esc(child.title || child.url)}">
+                        <img src="https://www.google.com/s2/favicons?domain=${getDomain(child.url)}&sz=32" alt="" loading="lazy">
+                        <span class="bookmark-title">${esc(child.title || child.url)}</span>
+                    </a>
+                `).join('')}
+            </div>
+        </div>
+    `).join('') || '<div class="bookmark-folder"><div class="bookmark-folder-title"><span class="material-symbols-rounded">folder_off</span>No bookmark folders found</div></div>';
+    container.querySelectorAll('img').forEach(img => {
+        img.addEventListener('error', () => { img.style.display = 'none'; });
+    });
 }
 
 function renderBookmarkItems(container, items) {
@@ -983,7 +1865,7 @@ function renderBookmarkItems(container, items) {
         const url = bm.url || '#';
         const title = bm.title || url;
         const domain = getDomain(url);
-        return `<a href="${url}" class="bookmark-item" title="${esc(title)}">
+        return `<a href="${esc(url)}" class="bookmark-item" title="${esc(title)}">
             <img src="https://www.google.com/s2/favicons?domain=${domain}&sz=32" alt="" loading="lazy">
             <span class="bookmark-title">${esc(title)}</span>
         </a>`;
@@ -1002,7 +1884,7 @@ function renderBookmarkItems(container, items) {
 function applyParticles() {
     const canvas = $('#particles-canvas');
     if (!canvas) return;
-    if (state.particles) {
+    if (state.particles && !state.performanceMode) {
         canvas.classList.remove('hidden');
         if (restartParticlesAnimation && !particlesAnimId) {
             restartParticlesAnimation();
@@ -1041,7 +1923,7 @@ function initParticles() {
     }
 
     function animate() {
-        if (!state.particles) {
+        if (!state.particles || state.performanceMode) {
             particlesAnimId = null;
             return;
         }
@@ -1087,6 +1969,9 @@ function openEditModal(mode) {
     } else if (mode === 'socialLinks') {
         updateEl('#edit-modal-title', 'Edit Social Links');
         renderEditItems(body, state.socialLinks);
+    } else if (mode === 'searchEngines') {
+        updateEl('#edit-modal-title', 'Edit Search Engines');
+        renderEditItems(body, state.searchEngines.map(engine => ({ name: engine.name, url: engine.url, icon: engine.icon })));
     }
     $('#edit-modal')?.classList.add('open');
     $('#edit-modal-backdrop')?.classList.add('visible');
@@ -1155,6 +2040,18 @@ function saveEditModal() {
     if (currentEditMode === 'shortcuts') { state.shortcuts = items; renderShortcuts(); }
     else if (currentEditMode === 'aiTools') { state.aiTools = items; renderAiTools(); }
     else if (currentEditMode === 'socialLinks') { state.socialLinks = items; renderSocialDock(); }
+    else if (currentEditMode === 'searchEngines') {
+        const nextItems = items.length ? items : clone(DEFAULT_SEARCH_ENGINES);
+        state.searchEngines = nextItems.map(item => ({
+            id: item.name.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+            name: item.name,
+            url: item.url,
+            icon: item.icon || 'search',
+            label: item.name.trim().charAt(0).toUpperCase() || 'S'
+        }));
+        if (!hasSearchEngine(state.engine)) state.engine = state.searchEngines[0]?.id || 'google';
+        renderSearchEngines();
+    }
     saveState();
     closeEditModal();
 }
@@ -1171,6 +2068,7 @@ function backupSettings() {
     a.download = `omspace-backup-${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
+    showToast('Your backup JSON has been downloaded.', 'success', 'Export ready');
 }
 
 function restoreSettings() {
@@ -1184,12 +2082,27 @@ function handleRestore(e) {
     reader.onload = (ev) => {
         try {
             const imported = JSON.parse(ev.target.result);
-            state = { ...JSON.parse(JSON.stringify(DEFAULT_STATE)), ...imported };
+            const mode = $('#restore-mode-select')?.value || 'all';
+            if (mode === 'all') {
+                state = normalizeStateShape(imported);
+            } else {
+                const nextState = normalizeStateShape(state);
+                const appearanceKeys = ['accent', 'theme', 'font', 'bgMode', 'bgUrl', 'liveWallpaper', 'particles', 'customGreeting', 'customQuoteEnabled', 'customQuoteText', 'customQuoteAuthor'];
+                const contentKeys = ['todos', 'quickNote', 'focusGoal', 'focusDate', 'habits', 'worldClocks', 'readingList', 'shortcuts', 'aiTools', 'socialLinks', 'agendaItems', 'customWidgets', 'pomoHistory', 'pomoSessions', 'pomoSessionDate'];
+                const layoutKeys = ['layout', 'freeLayout', 'layoutLocked', 'showClock', 'showWeather', 'showPomodoro', 'showFocus', 'showQuote', 'showShortcuts', 'showBottomWidgets', 'showAi', 'showGapps', 'showTodo', 'showNotes', 'showHabits', 'showWorldclock', 'showReading', 'showBookmarks', 'showSocialDock', 'showAgenda', 'showTopSites', 'showTabGroups', 'showCustomWidgets', 'showAiActions', 'showPomoStats'];
+                const keys = mode === 'appearance' ? appearanceKeys : mode === 'content' ? contentKeys : layoutKeys;
+                keys.forEach(key => {
+                    if (imported[key] !== undefined) nextState[key] = imported[key];
+                });
+                state = normalizeStateShape(nextState);
+            }
+            ensureProfileStates();
             saveState();
             renderAll();
-            alert('Settings restored successfully!');
+            if (state.showWeather && !state.weatherCache) fetchWeather();
+            showToast('Backup imported successfully.', 'success', 'Import complete');
         } catch {
-            alert('Invalid backup file.');
+            showToast('That file could not be read as a valid OmSpace backup.', 'error', 'Import failed');
         }
     };
     reader.readAsText(file);
@@ -1230,18 +2143,54 @@ function syncSettingsUI() {
     setChk('#toggle-bookmarks', state.showBookmarks);
     setChk('#toggle-bottomwidgets', state.showBottomWidgets);
     setChk('#toggle-socialdock', state.showSocialDock);
+    setChk('#toggle-agenda', state.showAgenda);
+    setChk('#toggle-topsites', state.showTopSites);
+    setChk('#toggle-tabgroups', state.showTabGroups);
+    setChk('#toggle-customwidgets', state.showCustomWidgets);
+    setChk('#toggle-aiactions', state.showAiActions);
+    setChk('#toggle-pomostats', state.showPomoStats);
     setChk('#toggle-livewp', state.liveWallpaper);
     setChk('#toggle-particles', state.particles);
     setChk('#toggle-24h', state.use24Hour);
     setChk('#toggle-locklayout', state.layoutLocked);
+    setChk('#toggle-performance', state.performanceMode);
+    setChk('#toggle-sync', state.syncEnabled);
+    setChk('#toggle-zen', state.zenMode);
+    setChk('#toggle-weather-unit', state.weatherUnit === 'f');
+    setChk('#toggle-custom-quote', state.customQuoteEnabled);
 
     const nameInput = $('#user-name-input');
     if (nameInput) nameInput.value = state.userName || '';
+    const greetingInput = $('#greeting-input');
+    if (greetingInput) greetingInput.value = state.customGreeting || '';
+    const quoteInput = $('#custom-quote-input');
+    if (quoteInput) quoteInput.value = state.customQuoteText || '';
+    const quoteAuthorInput = $('#custom-quote-author-input');
+    if (quoteAuthorInput) quoteAuthorInput.value = state.customQuoteAuthor || '';
+    const providerSelect = $('#ai-provider-select');
+    if (providerSelect) providerSelect.value = state.aiProvider || 'chatgpt';
+    const restoreModeSelect = $('#restore-mode-select');
+    if (restoreModeSelect) restoreModeSelect.value = state.restoreMode || 'all';
+    const shortcutSearch = $('#shortcut-search-input');
+    const shortcutHelp = $('#shortcut-help-input');
+    const shortcutTheme = $('#shortcut-theme-input');
+    const shortcutPomo = $('#shortcut-pomo-input');
+    const shortcutSettings = $('#shortcut-settings-input');
+    if (shortcutSearch) shortcutSearch.value = state.shortcutsConfig.search || '/';
+    if (shortcutHelp) shortcutHelp.value = state.shortcutsConfig.help || '?';
+    if (shortcutTheme) shortcutTheme.value = (state.shortcutsConfig.theme || 't').toUpperCase();
+    if (shortcutPomo) shortcutPomo.value = (state.shortcutsConfig.pomo || 'p').toUpperCase();
+    if (shortcutSettings) shortcutSettings.value = (state.shortcutsConfig.settings || 's').toUpperCase();
+    $('#note-preview-toggle')?.classList.toggle('active', !!state.notePreview);
 
     updateEngineUI();
 
     $('#bm-list-view')?.classList.toggle('active', state.bookmarkView === 'list');
     $('#bm-grid-view')?.classList.toggle('active', state.bookmarkView === 'grid');
+    $('#bm-recent-view')?.classList.toggle('active', state.bookmarkSource === 'recent');
+    $('#bm-folders-view')?.classList.toggle('active', state.bookmarkSource === 'folders');
+    renderProfileBar();
+    setSettingsTab(activeSettingsTab);
 }
 
 function setChk(sel, val) { const el = $(sel); if (el) el.checked = !!val; }
@@ -1252,7 +2201,20 @@ function setChk(sel, val) { const el = $(sel); if (el) el.checked = !!val; }
 function setupAllEvents() {
     // Search
     $('#search-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(); });
-    $$('.engine-chip').forEach(b => b.addEventListener('click', () => setEngine(b.dataset.engine)));
+    $('#engine-strip')?.addEventListener('click', e => {
+        const btn = e.target.closest('.engine-chip');
+        if (!btn) return;
+        setEngine(btn.dataset.engine);
+    });
+    $('#edit-engines-btn')?.addEventListener('click', () => openEditModal('searchEngines'));
+    $('#search-engines-manage-btn')?.addEventListener('click', () => openEditModal('searchEngines'));
+    $$('.profile-chip').forEach(btn => btn.addEventListener('click', () => switchProfile(btn.dataset.profile)));
+    $('#zen-toggle-btn')?.addEventListener('click', () => {
+        state.zenMode = !state.zenMode;
+        saveState();
+        applyZenMode();
+        syncSettingsUI();
+    });
 
     // Theme toggle
     $('#theme-toggle-fab')?.addEventListener('click', toggleTheme);
@@ -1265,9 +2227,10 @@ function setupAllEvents() {
     });
 
     // Settings
-    $('#settings-fab')?.addEventListener('click', () => { $('#settings-panel')?.classList.add('open'); $('#settings-backdrop')?.classList.add('visible'); });
+    $('#settings-fab')?.addEventListener('click', () => openSettingsPanel());
     $('#settings-close')?.addEventListener('click', closeSettings);
     $('#settings-backdrop')?.addEventListener('click', closeSettings);
+    $$('.settings-tab-btn').forEach(btn => btn.addEventListener('click', () => setSettingsTab(btn.dataset.settingsTabBtn, { resetScroll: true })));
 
     // Accent
     $$('.accent-dot').forEach(d => d.addEventListener('click', () => {
@@ -1292,12 +2255,41 @@ function setupAllEvents() {
         else { state.bgMode = 'gradient'; state.bgUrl = ''; }
         saveState(); applyBackground(); syncSettingsUI();
     });
+    $('#bg-upload-btn')?.addEventListener('click', () => $('#bg-file-input')?.click());
+    $('#bg-file-input')?.addEventListener('change', handleBackgroundUpload);
+    $('#bg-clear-btn')?.addEventListener('click', () => {
+        state.bgMode = 'gradient';
+        state.bgUrl = '';
+        saveState();
+        applyBackground();
+        syncSettingsUI();
+    });
 
     // Live wallpaper toggle
     bindToggle('#toggle-livewp', 'liveWallpaper', () => { applyBackground(); syncSettingsUI(); });
 
     // Particles toggle
     bindToggle('#toggle-particles', 'particles', () => applyParticles());
+    bindToggle('#toggle-performance', 'performanceMode', () => {
+        applyPerformanceMode();
+        applyParticles();
+        applyBackground();
+        if (state.showWeather) fetchWeather();
+        renderQuote();
+        if (state.showBottomWidgets) initBottomWidgets();
+    });
+    bindToggle('#toggle-sync', 'syncEnabled', () => {
+        void syncCoreState();
+    });
+    bindToggle('#toggle-zen', 'zenMode', () => {
+        applyZenMode();
+    });
+    $('#toggle-weather-unit')?.addEventListener('change', e => {
+        state.weatherUnit = e.target.checked ? 'f' : 'c';
+        saveState();
+        if (state.showWeather) fetchWeather(true);
+    });
+    $('#weather-refresh-btn')?.addEventListener('click', () => fetchWeather(true));
 
     // 24 Hour Time
     bindToggle('#toggle-24h', 'use24Hour', updateClock);
@@ -1326,10 +2318,59 @@ function setupAllEvents() {
         if (state.showBottomWidgets) initBottomWidgets();
     });
     bindToggle('#toggle-socialdock', 'showSocialDock');
+    bindToggle('#toggle-agenda', 'showAgenda');
+    bindToggle('#toggle-topsites', 'showTopSites');
+    bindToggle('#toggle-tabgroups', 'showTabGroups');
+    bindToggle('#toggle-customwidgets', 'showCustomWidgets');
+    bindToggle('#toggle-aiactions', 'showAiActions');
+    bindToggle('#toggle-pomostats', 'showPomoStats');
 
     // User name
     $('#user-name-input')?.addEventListener('change', e => {
         state.userName = e.target.value.trim(); saveState(); updateClock();
+    });
+    $('#greeting-input')?.addEventListener('change', e => {
+        state.customGreeting = e.target.value.trim();
+        saveState();
+        updateClock();
+    });
+    $('#toggle-custom-quote')?.addEventListener('change', e => {
+        state.customQuoteEnabled = e.target.checked;
+        saveState();
+        renderQuote();
+    });
+    $('#custom-quote-input')?.addEventListener('change', e => {
+        state.customQuoteText = e.target.value;
+        saveState();
+        renderQuote();
+    });
+    $('#custom-quote-author-input')?.addEventListener('change', e => {
+        state.customQuoteAuthor = e.target.value.trim();
+        saveState();
+        renderQuote();
+    });
+    $('#ai-provider-select')?.addEventListener('change', e => {
+        state.aiProvider = e.target.value;
+        saveState();
+    });
+    $('#restore-mode-select')?.addEventListener('change', e => {
+        state.restoreMode = e.target.value;
+        saveState();
+    });
+    [
+        ['#shortcut-search-input', 'search'],
+        ['#shortcut-help-input', 'help'],
+        ['#shortcut-theme-input', 'theme'],
+        ['#shortcut-pomo-input', 'pomo'],
+        ['#shortcut-settings-input', 'settings']
+    ].forEach(([selector, key]) => {
+        $(selector)?.addEventListener('change', e => {
+            const value = (e.target.value || '').trim().slice(0, 1) || DEFAULT_STATE.shortcutsConfig[key];
+            state.shortcutsConfig[key] = value.toLowerCase();
+            saveState();
+            syncSettingsUI();
+            renderKeyboardShortcutUI();
+        });
     });
 
     // Reset
@@ -1377,10 +2418,45 @@ function setupAllEvents() {
         else if (t.dataset.action === 'pin') { const todo = state.todos.find(x => x.id === id); if (todo) { todo.pinned = !todo.pinned; saveState(); renderTodos(); } }
         else if (t.dataset.action === 'delete') { state.todos = state.todos.filter(x => x.id !== id); saveState(); renderTodos(); }
     });
+    $('#todo-list')?.addEventListener('dragstart', e => {
+        const item = e.target.closest('.todo-item');
+        if (!item) return;
+        draggedTodoId = item.dataset.id;
+        item.classList.add('dragging');
+    });
+    $('#todo-list')?.addEventListener('dragend', e => {
+        e.target.closest('.todo-item')?.classList.remove('dragging');
+        draggedTodoId = null;
+    });
+    $('#todo-list')?.addEventListener('dragover', e => {
+        if (e.target.closest('.todo-item')) e.preventDefault();
+    });
+    $('#todo-list')?.addEventListener('drop', e => {
+        const target = e.target.closest('.todo-item');
+        if (!target || !draggedTodoId) return;
+        e.preventDefault();
+        reorderTodo(draggedTodoId, target.dataset.id);
+    });
 
     // Quick Note
     let noteTimer;
     $('#quick-note')?.addEventListener('input', () => { clearTimeout(noteTimer); noteTimer = setTimeout(saveQuickNote, 500); });
+    $('#note-preview-toggle')?.addEventListener('click', () => {
+        state.notePreview = !state.notePreview;
+        saveState();
+        const area = $('#quick-note');
+        const preview = $('#quick-note-preview');
+        if (area && preview) {
+            area.style.display = state.notePreview ? 'none' : 'block';
+            preview.style.display = state.notePreview ? 'block' : 'none';
+        }
+        syncSettingsUI();
+    });
+    $('#quick-note-preview')?.addEventListener('click', e => {
+        const item = e.target.closest('.note-check-item');
+        if (!item) return;
+        toggleQuickNoteChecklist(Number(item.dataset.line));
+    });
 
     // Focus
     $('#focus-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') setFocus(); });
@@ -1392,7 +2468,7 @@ function setupAllEvents() {
     $('#pomo-skip')?.addEventListener('click', skipPomo);
 
     // Habits
-    $('#add-habit-btn')?.addEventListener('click', addHabit);
+    $('#add-habit-btn')?.addEventListener('click', () => openCreateModal('habit'));
     $('#habit-list')?.addEventListener('click', e => {
         const chk = e.target.closest('.habit-check');
         if (chk) { toggleHabit(parseInt(chk.dataset.hidx)); return; }
@@ -1401,7 +2477,7 @@ function setupAllEvents() {
     });
 
     // World Clock
-    $('#add-tz-btn')?.addEventListener('click', addWorldClock);
+    $('#add-tz-btn')?.addEventListener('click', () => openCreateModal('worldClock'));
     $('#worldclock-list')?.addEventListener('click', e => {
         const del = e.target.closest('.wc-delete');
         if (del) deleteWorldClock(parseInt(del.dataset.wcidx));
@@ -1411,9 +2487,39 @@ function setupAllEvents() {
     $('#reading-add-btn')?.addEventListener('click', addReading);
     $('#reading-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addReading(); });
 
+    // Agenda
+    $('#event-add-btn')?.addEventListener('click', addAgendaItem);
+    $('#event-title-input')?.addEventListener('keydown', e => { if (e.key === 'Enter') addAgendaItem(); });
+    $('#agenda-list')?.addEventListener('click', e => {
+        const target = e.target.closest('[data-action="delete-event"]');
+        if (target) deleteAgendaItem(target.dataset.id);
+    });
+    $('#open-google-calendar')?.addEventListener('click', e => {
+        e.stopPropagation();
+        window.open('https://calendar.google.com', '_blank');
+    });
+
     // Bookmarks view
     $('#bm-list-view')?.addEventListener('click', () => { state.bookmarkView = 'list'; saveState(); renderBookmarks(); syncSettingsUI(); });
     $('#bm-grid-view')?.addEventListener('click', () => { state.bookmarkView = 'grid'; saveState(); renderBookmarks(); syncSettingsUI(); });
+    $('#bm-recent-view')?.addEventListener('click', () => { state.bookmarkSource = 'recent'; saveState(); renderBookmarks(); syncSettingsUI(); });
+    $('#bm-folders-view')?.addEventListener('click', () => { state.bookmarkSource = 'folders'; saveState(); renderBookmarks(); syncSettingsUI(); });
+
+    // Custom widgets, tab groups, quick actions
+    $('#add-custom-widget-btn')?.addEventListener('click', () => openCreateModal('customWidget'));
+    $('#custom-widgets-list')?.addEventListener('click', e => {
+        const target = e.target.closest('[data-action="delete-widget"]');
+        if (target) deleteCustomWidget(target.dataset.id);
+    });
+    $('#quick-actions-grid')?.addEventListener('click', e => {
+        const button = e.target.closest('.quick-action-btn');
+        if (!button) return;
+        runQuickAction(button.dataset.actionId, button);
+    });
+    $('#tab-groups-list')?.addEventListener('click', e => {
+        const target = e.target.closest('[data-action="focus-group"]');
+        if (target) focusTabGroup(target.dataset.groupId);
+    });
 
     // Edit modals
     $('#edit-shortcuts-btn')?.addEventListener('click', () => openEditModal('shortcuts'));
@@ -1422,20 +2528,28 @@ function setupAllEvents() {
     $('#edit-modal-backdrop')?.addEventListener('click', closeEditModal);
     $('#edit-modal-add')?.addEventListener('click', addEditItem);
     $('#edit-modal-save')?.addEventListener('click', saveEditModal);
+    $('#create-modal-close')?.addEventListener('click', closeCreateModal);
+    $('#create-modal-cancel')?.addEventListener('click', closeCreateModal);
+    $('#create-modal-backdrop')?.addEventListener('click', closeCreateModal);
+    $('#create-modal-form')?.addEventListener('submit', e => {
+        e.preventDefault();
+        submitCreateModal();
+    });
 
     // Keyboard shortcuts
     document.addEventListener('keydown', e => {
         const tag = document.activeElement?.tagName;
         if (tag === 'INPUT' || tag === 'TEXTAREA') {
-            if (e.key === 'Escape') { document.activeElement.blur(); closeSettings(); closeEditModal(); toggleKBOverlayOff(); }
+            if (e.key === 'Escape') { document.activeElement.blur(); closeSettings(); closeEditModal(); closeCreateModal(); toggleKBOverlayOff(); }
             return;
         }
-        if (e.key === '/') { e.preventDefault(); $('#search-input')?.focus(); }
-        else if (e.key === 'Escape') { closeSettings(); closeEditModal(); toggleKBOverlayOff(); }
-        else if (e.key === '?') toggleKBOverlay();
-        else if (e.key === 't' || e.key === 'T') toggleTheme();
-        else if (e.key === 'p' || e.key === 'P') togglePomo();
-        else if (e.key === 's' || e.key === 'S') { $('#settings-panel')?.classList.add('open'); $('#settings-backdrop')?.classList.add('visible'); }
+        const key = e.key.toLowerCase();
+        if (key === (state.shortcutsConfig.search || '/')) { e.preventDefault(); $('#search-input')?.focus(); }
+        else if (e.key === 'Escape') { closeSettings(); closeEditModal(); closeCreateModal(); toggleKBOverlayOff(); }
+        else if (key === (state.shortcutsConfig.help || '?')) toggleKBOverlay();
+        else if (key === (state.shortcutsConfig.theme || 't')) toggleTheme();
+        else if (key === (state.shortcutsConfig.pomo || 'p')) togglePomo();
+        else if (key === (state.shortcutsConfig.settings || 's')) openSettingsPanel();
     });
 }
 
@@ -1473,6 +2587,59 @@ function uid() {
 
 function getDomain(url) {
     try { return new URL(url).hostname; } catch { return ''; }
+}
+
+function normalizeExternalUrl(value) {
+    const raw = value.trim();
+    if (!raw) return '';
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return `https://${raw}`;
+}
+
+function formatDateLabel(value) {
+    try {
+        return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    } catch {
+        return value;
+    }
+}
+
+function formatDateTimeLabel(value) {
+    try {
+        return new Date(value).toLocaleString(undefined, {
+            month: 'short',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: !state.use24Hour
+        });
+    } catch {
+        return value;
+    }
+}
+
+function handleBackgroundUpload(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 1.5 * 1024 * 1024) {
+        showToast('Please choose an image smaller than 1.5 MB for local wallpaper.', 'error', 'Image too large');
+        e.target.value = '';
+        return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+        const result = event.target?.result;
+        if (typeof result !== 'string') return;
+        state.bgMode = 'custom';
+        state.bgUrl = result;
+        state.liveWallpaper = false;
+        saveState();
+        applyBackground();
+        syncSettingsUI();
+        e.target.value = '';
+        showToast('Local wallpaper updated.', 'success', 'Background saved');
+    };
+    reader.readAsDataURL(file);
 }
 
 // ═══════════════════════════════════════
@@ -1517,8 +2684,34 @@ function initSmoothScroll() {
     let currentScroll = window.scrollY;
     let rafId = null;
     const ease = 0.08; //  lower = smoother/slower, higher = snappier
+    const nativeScrollSelector = [
+        '.col-left',
+        '.col-center',
+        '.col-right',
+        '#settings-panel',
+        '.settings-body',
+        '.edit-modal',
+        '.edit-modal-body',
+        '#kb-overlay',
+        '.todo-list',
+        '.reading-list',
+        '.bookmarks-list',
+        '.habit-list',
+        '.worldclock-list',
+        '.quick-note-preview',
+        '.ai-tools-grid',
+        '.gapps-grid',
+        '.custom-widgets-list',
+        '.quick-actions-grid'
+    ].join(',');
 
     function smoothStep() {
+        if (state.performanceMode) {
+            targetScroll = window.scrollY;
+            currentScroll = window.scrollY;
+            rafId = null;
+            return;
+        }
         currentScroll += (targetScroll - currentScroll) * ease;
 
         // Stop when close enough
@@ -1534,13 +2727,17 @@ function initSmoothScroll() {
     }
 
     window.addEventListener('wheel', (e) => {
+        if (state.performanceMode) return;
+        const path = typeof e.composedPath === 'function' ? e.composedPath() : [];
+        if (path.some(el => el instanceof Element && (el.matches?.(nativeScrollSelector) || el.closest?.(nativeScrollSelector)))) {
+            return;
+        }
         // Skip if inside scrollable inner elements
-        const path = e.composedPath();
         for (const el of path) {
             if (el === document || el === window) break;
             if (el.scrollHeight > el.clientHeight && el !== document.documentElement && el !== document.body) {
                 const style = getComputedStyle(el);
-                if (style.overflowY === 'auto' || style.overflowY === 'scroll') {
+                if (/auto|scroll|overlay/.test(style.overflowY)) {
                     // Check if scroll is actually needed (not at top/bottom)
                     const atTop = el.scrollTop === 0 && e.deltaY < 0;
                     const atBot = el.scrollTop + el.clientHeight >= el.scrollHeight - 1 && e.deltaY > 0;
@@ -1589,6 +2786,8 @@ function initBottomWidgets() {
     if (factText) {
         factText.textContent = TECH_FACTS[Math.floor(Math.random() * TECH_FACTS.length)];
     }
+
+    if (state.performanceMode) return;
 
     // Fetch Live Crypto & Currency Rates
     async function fetchLiveMarket() {
@@ -1774,6 +2973,7 @@ function initDragAndDrop() {
 // BOOT
 // ═══════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-    init();
-    initSmoothScroll();
+    void init().then(() => {
+        if (!state.performanceMode) initSmoothScroll();
+    });
 });

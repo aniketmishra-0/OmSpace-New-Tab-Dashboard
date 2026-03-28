@@ -111,6 +111,18 @@
         <!-- ═══ CENTER COLUMN ═══ -->
         <div class="col-center">
 
+            <section id="profile-bar" class="profile-bar">
+                <div class="profile-switcher" id="profile-switcher">
+                    <button class="profile-chip active" data-profile="personal">Personal</button>
+                    <button class="profile-chip" data-profile="work">Work</button>
+                    <button class="profile-chip" data-profile="minimal">Minimal</button>
+                </div>
+                <button id="zen-toggle-btn" class="profile-action-btn" title="Toggle Zen Mode">
+                    <span class="material-symbols-rounded">self_improvement</span>
+                    <span>Zen</span>
+                </button>
+            </section>
+
             <!-- Quote of the Day -->
             <section id="quote-card" class="quote-section">
                 <blockquote id="quote-text" class="quote-text">"The only way to do great work is to love what you do."</blockquote>
@@ -124,11 +136,11 @@
                     <input type="text" id="search-input" placeholder="Search the web..." autocomplete="off">
                     <div class="search-engine-indicator"><span id="engine-label">G</span></div>
                 </div>
-                <div class="engine-strip">
-                    <button class="engine-chip active" data-engine="google"><span class="material-symbols-rounded">search</span> Google</button>
-                    <button class="engine-chip" data-engine="youtube"><span class="material-symbols-rounded">play_circle</span> YouTube</button>
-                    <button class="engine-chip" data-engine="duckduckgo"><span class="material-symbols-rounded">shield</span> DuckDuckGo</button>
-                    <button class="engine-chip" data-engine="bing"><span class="material-symbols-rounded">language</span> Bing</button>
+                <div class="search-toolbar">
+                    <div class="engine-strip" id="engine-strip"></div>
+                    <button class="search-manage-btn" id="edit-engines-btn" title="Edit search engines">
+                        <span class="material-symbols-rounded">tune</span>
+                    </button>
                 </div>
             </section>
 
@@ -212,8 +224,14 @@
 
             <!-- Quick Note -->
             <section id="notes-card" class="glass-card notes-card">
-                <div class="card-header"><h3><span class="material-symbols-rounded">sticky_note_2</span> Quick Note</h3></div>
+                <div class="card-header">
+                    <h3><span class="material-symbols-rounded">sticky_note_2</span> Quick Note</h3>
+                    <div class="header-actions">
+                        <button class="icon-btn-ghost" id="note-preview-toggle" title="Toggle Preview"><span class="material-symbols-rounded">preview</span></button>
+                    </div>
+                </div>
                 <textarea id="quick-note" class="quick-note-area" placeholder="Jot down something..."></textarea>
+                <div id="quick-note-preview" class="quick-note-preview" style="display:none;"></div>
             </section>
 
             <!-- To-Do Card (Collapsible) -->
@@ -229,9 +247,35 @@
                     <div class="todo-body-inner">
                         <div class="todo-input-row">
                             <input type="text" id="todo-input" placeholder="Add a task..." autocomplete="off">
+                            <input type="date" id="todo-date-input" class="todo-date-input">
+                            <select id="todo-priority-input" class="todo-priority-input">
+                                <option value="normal">Normal</option>
+                                <option value="high">High</option>
+                                <option value="low">Low</option>
+                            </select>
                             <button id="todo-add-btn" class="icon-btn"><span class="material-symbols-rounded">add</span></button>
                         </div>
                         <ul id="todo-list" class="todo-list"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <section id="agenda-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="agenda-body">
+                    <h3><span class="material-symbols-rounded">calendar_month</span> Agenda</h3>
+                    <div class="header-actions">
+                        <button class="icon-btn-ghost" id="open-google-calendar" title="Open Google Calendar"><span class="material-symbols-rounded">open_in_new</span></button>
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="agenda-body">
+                    <div class="agenda-body-inner">
+                        <div class="todo-input-row">
+                            <input type="text" id="event-title-input" placeholder="Event title..." autocomplete="off">
+                            <input type="datetime-local" id="event-date-input" class="todo-date-input">
+                            <button id="event-add-btn" class="icon-btn"><span class="material-symbols-rounded">add</span></button>
+                        </div>
+                        <div id="agenda-list" class="reading-list"></div>
                     </div>
                 </div>
             </section>
@@ -317,6 +361,10 @@
                     <h3><span class="material-symbols-rounded">bookmarks</span> Bookmarks</h3>
                     <div class="header-actions">
                         <div class="bookmark-view-toggle">
+                            <button class="view-btn active" data-source="recent" id="bm-recent-view"><span class="material-symbols-rounded">schedule</span></button>
+                            <button class="view-btn" data-source="folders" id="bm-folders-view"><span class="material-symbols-rounded">folder</span></button>
+                        </div>
+                        <div class="bookmark-view-toggle">
                             <button class="view-btn active" data-view="list" id="bm-list-view"><span class="material-symbols-rounded">view_list</span></button>
                             <button class="view-btn" data-view="grid" id="bm-grid-view"><span class="material-symbols-rounded">grid_view</span></button>
                         </div>
@@ -326,6 +374,77 @@
                 <div class="collapsible-body" id="bookmarks-body">
                     <div>
                         <div id="bookmarks-list" class="bookmarks-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="top-sites-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="topsites-body">
+                    <h3><span class="material-symbols-rounded">trending_up</span> Top Sites</h3>
+                    <div class="header-actions">
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="topsites-body">
+                    <div>
+                        <div id="top-sites-list" class="bookmarks-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="tab-groups-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="tabgroups-body">
+                    <h3><span class="material-symbols-rounded">tabs</span> Tab Groups</h3>
+                    <div class="header-actions">
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="tabgroups-body">
+                    <div>
+                        <div id="tab-groups-list" class="worldclock-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="custom-widgets-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="customwidgets-body">
+                    <h3><span class="material-symbols-rounded">dashboard_customize</span> Custom Widgets</h3>
+                    <div class="header-actions">
+                        <button class="icon-btn-ghost" id="add-custom-widget-btn" title="Add Widget"><span class="material-symbols-rounded">add</span></button>
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="customwidgets-body">
+                    <div>
+                        <div id="custom-widgets-list" class="custom-widgets-list"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="ai-actions-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="aiactions-body">
+                    <h3><span class="material-symbols-rounded">bolt</span> AI Quick Actions</h3>
+                    <div class="header-actions">
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="aiactions-body">
+                    <div>
+                        <div class="quick-actions-grid" id="quick-actions-grid"></div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="pomo-stats-card" class="glass-card collapsible-card">
+                <div class="card-header collapsible-header" data-collapse="pomostats-body">
+                    <h3><span class="material-symbols-rounded">bar_chart</span> Pomodoro Stats</h3>
+                    <div class="header-actions">
+                        <span class="material-symbols-rounded collapse-arrow">expand_more</span>
+                    </div>
+                </div>
+                <div class="collapsible-body" id="pomostats-body">
+                    <div>
+                        <div id="pomo-stats-chart" class="pomo-stats-chart"></div>
                     </div>
                 </div>
             </section>
@@ -343,8 +462,14 @@
             <h2>Customize</h2>
             <button id="settings-close" class="icon-btn-ghost"><span class="material-symbols-rounded">close</span></button>
         </div>
+        <div class="settings-tabs" id="settings-tabs">
+            <button class="settings-tab-btn active" data-settings-tab-btn="look">Look</button>
+            <button class="settings-tab-btn" data-settings-tab-btn="layout">Layout</button>
+            <button class="settings-tab-btn" data-settings-tab-btn="tools">Tools</button>
+            <button class="settings-tab-btn" data-settings-tab-btn="data">Data</button>
+        </div>
         <div class="settings-body">
-            <div class="setting-section">
+            <div class="setting-section" data-settings-tab="look">
                 <h4>Accent Color</h4>
                 <div class="accent-grid" id="accent-grid">
                     <button class="accent-dot active" data-color="#a8c7fa" style="--dot-color:#a8c7fa"></button>
@@ -357,7 +482,7 @@
                     <button class="accent-dot" data-color="#ff5370" style="--dot-color:#ff5370"></button>
                 </div>
             </div>
-            <div class="setting-section">
+            <div class="setting-section" data-settings-tab="look">
                 <h4>Font</h4>
                 <div class="font-picker" id="font-picker">
                     <button class="font-chip active" data-font="'Plus Jakarta Sans'">Jakarta Sans</button>
@@ -367,9 +492,14 @@
                     <button class="font-chip" data-font="'DM Sans'">DM Sans</button>
                 </div>
             </div>
-            <div class="setting-section">
+            <div class="setting-section" data-settings-tab="look">
                 <h4>Background</h4>
                 <input type="text" id="bg-url-input" class="setting-input" placeholder="Paste image URL...">
+                <div class="backup-row" style="margin-top:8px;">
+                    <button id="bg-upload-btn" class="action-btn"><span class="material-symbols-rounded">upload</span> Upload Image</button>
+                    <button id="bg-clear-btn" class="action-btn"><span class="material-symbols-rounded">delete</span> Clear</button>
+                </div>
+                <input type="file" id="bg-file-input" accept="image/*" style="display:none">
                 <div class="bg-presets" id="bg-presets">
                     <button class="bg-preset-btn active" data-bg="gradient">Gradient</button>
                     <button class="bg-preset-btn" data-bg="abstract">Abstract</button>
@@ -384,15 +514,28 @@
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">wallpaper</span> Auto Wallpaper (Daily)</div><input type="checkbox" id="toggle-livewp"><span class="toggle-track"></span></label>
                 </div>
             </div>
-            <div class="setting-section card-section">
+            <div class="setting-section card-section" data-settings-tab="layout">
                 <h4>Preferences</h4>
                 <div class="settings-group">
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">lock_open</span> Lock Layout</div><input type="checkbox" id="toggle-locklayout" checked><span class="toggle-track"></span></label>
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">123</span> Use 24-Hour Time</div><input type="checkbox" id="toggle-24h"><span class="toggle-track"></span></label>
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">blur_on</span> Particle Effects</div><input type="checkbox" id="toggle-particles" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">rocket_launch</span> Performance Mode</div><input type="checkbox" id="toggle-performance"><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">cloud_sync</span> Sync Core Settings</div><input type="checkbox" id="toggle-sync"><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">self_improvement</span> Zen Mode</div><input type="checkbox" id="toggle-zen"><span class="toggle-track"></span></label>
                 </div>
             </div>
-            <div class="setting-section card-section">
+            <div class="setting-section card-section" data-settings-tab="tools">
+                <h4>Weather & Search</h4>
+                <div class="settings-group">
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">thermostat</span> Fahrenheit</div><input type="checkbox" id="toggle-weather-unit"><span class="toggle-track"></span></label>
+                </div>
+                <div class="backup-row" style="margin-top:10px;">
+                    <button id="weather-refresh-btn" class="action-btn"><span class="material-symbols-rounded">refresh</span> Refresh Weather</button>
+                    <button id="search-engines-manage-btn" class="action-btn"><span class="material-symbols-rounded">travel_explore</span> Manage Engines</button>
+                </div>
+            </div>
+            <div class="setting-section card-section" data-settings-tab="layout">
                 <h4>Widgets</h4>
                 <div class="settings-group">
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">schedule</span> Clock</div><input type="checkbox" id="toggle-clock" checked><span class="toggle-track"></span></label>
@@ -411,21 +554,62 @@
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">menu_book</span> Reading List</div><input type="checkbox" id="toggle-reading" checked><span class="toggle-track"></span></label>
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">bookmark</span> Bookmarks</div><input type="checkbox" id="toggle-bookmarks" checked><span class="toggle-track"></span></label>
                     <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">share</span> Social Dock</div><input type="checkbox" id="toggle-socialdock" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">event</span> Agenda</div><input type="checkbox" id="toggle-agenda" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">trending_up</span> Top Sites</div><input type="checkbox" id="toggle-topsites" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">tabs</span> Tab Groups</div><input type="checkbox" id="toggle-tabgroups" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">dashboard_customize</span> Custom Widgets</div><input type="checkbox" id="toggle-customwidgets" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">bolt</span> AI Actions</div><input type="checkbox" id="toggle-aiactions" checked><span class="toggle-track"></span></label>
+                    <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">bar_chart</span> Pomodoro Stats</div><input type="checkbox" id="toggle-pomostats" checked><span class="toggle-track"></span></label>
                 </div>
             </div>
-            <div class="setting-section card-section">
+            <div class="setting-section card-section" data-settings-tab="tools">
                 <h4>Your Name</h4>
                 <input type="text" id="user-name-input" class="setting-input" placeholder="Enter your name...">
             </div>
-            <div class="setting-section card-section">
+            <div class="setting-section card-section" data-settings-tab="look">
+                <h4>Greeting & Quote</h4>
+                <input type="text" id="greeting-input" class="setting-input" placeholder="Custom greeting prefix...">
+                <div style="height:8px;"></div>
+                <label class="setting-toggle"><div class="toggle-lbl"><span class="material-symbols-rounded">format_quote</span> Use Custom Quote</div><input type="checkbox" id="toggle-custom-quote"><span class="toggle-track"></span></label>
+                <div style="height:8px;"></div>
+                <textarea id="custom-quote-input" class="setting-input" rows="3" placeholder="Write your favorite quote..."></textarea>
+                <div style="height:8px;"></div>
+                <input type="text" id="custom-quote-author-input" class="setting-input" placeholder="Quote author...">
+            </div>
+            <div class="setting-section card-section" data-settings-tab="tools">
+                <h4>Keyboard Shortcuts</h4>
+                <div class="shortcut-settings-grid">
+                    <input type="text" id="shortcut-search-input" class="setting-input" maxlength="1" placeholder="/">
+                    <input type="text" id="shortcut-help-input" class="setting-input" maxlength="1" placeholder="?">
+                    <input type="text" id="shortcut-theme-input" class="setting-input" maxlength="1" placeholder="T">
+                    <input type="text" id="shortcut-pomo-input" class="setting-input" maxlength="1" placeholder="P">
+                    <input type="text" id="shortcut-settings-input" class="setting-input" maxlength="1" placeholder="S">
+                </div>
+            </div>
+            <div class="setting-section card-section" data-settings-tab="tools">
+                <h4>AI Actions</h4>
+                <select id="ai-provider-select" class="setting-input">
+                    <option value="chatgpt">ChatGPT</option>
+                    <option value="gemini">Gemini</option>
+                    <option value="claude">Claude</option>
+                    <option value="perplexity">Perplexity</option>
+                </select>
+            </div>
+            <div class="setting-section card-section" data-settings-tab="data">
                 <h4>Backup & Restore</h4>
+                <select id="restore-mode-select" class="setting-input" style="margin-bottom:8px;">
+                    <option value="all">Restore Everything</option>
+                    <option value="appearance">Appearance Only</option>
+                    <option value="content">Content Only</option>
+                    <option value="layout">Layout Only</option>
+                </select>
                 <div class="backup-row">
                     <button id="backup-btn" class="action-btn"><span class="material-symbols-rounded">download</span> Export</button>
                     <button id="restore-btn" class="action-btn"><span class="material-symbols-rounded">upload</span> Import</button>
                 </div>
                 <input type="file" id="restore-file" accept=".json" style="display:none">
             </div>
-            <div class="setting-section card-section reset-section">
+            <div class="setting-section card-section reset-section" data-settings-tab="data">
                 <button id="reset-btn" class="danger-btn"><span class="material-symbols-rounded">restart_alt</span> Reset All Settings</button>
             </div>
         </div>
@@ -460,17 +644,36 @@
         </div>
     </div>
 
+    <!-- Create Modal -->
+    <div id="create-modal-backdrop" class="modal-backdrop"></div>
+    <div id="create-modal" class="edit-modal" style="max-width:420px;">
+        <div class="edit-modal-header">
+            <div>
+                <h3 id="create-modal-title">Add Item</h3>
+                <p id="create-modal-subtitle" class="modal-subtitle">Fill the details below.</p>
+            </div>
+            <button id="create-modal-close" class="icon-btn-ghost"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <form id="create-modal-form" class="edit-modal-body entry-form">
+            <div id="create-modal-fields" class="form-grid"></div>
+        </form>
+        <div class="edit-modal-footer">
+            <button id="create-modal-cancel" type="button" class="action-btn">Cancel</button>
+            <button id="create-modal-save" type="submit" form="create-modal-form" class="save-btn"><span class="material-symbols-rounded">check</span> Save</button>
+        </div>
+    </div>
+
     <!-- Keyboard Shortcuts Overlay -->
     <div id="kb-overlay" class="kb-overlay">
         <div class="kb-modal">
             <h3>Keyboard Shortcuts</h3>
             <div class="kb-grid">
-                <div class="kb-item"><kbd>/</kbd><span>Focus Search</span></div>
+                <div class="kb-item"><kbd id="shortcut-search-kbd">/</kbd><span>Focus Search</span></div>
                 <div class="kb-item"><kbd>Esc</kbd><span>Close Panel</span></div>
-                <div class="kb-item"><kbd>?</kbd><span>Show Shortcuts</span></div>
-                <div class="kb-item"><kbd>T</kbd><span>Toggle Theme</span></div>
-                <div class="kb-item"><kbd>P</kbd><span>Start/Pause Pomodoro</span></div>
-                <div class="kb-item"><kbd>S</kbd><span>Open Settings</span></div>
+                <div class="kb-item"><kbd id="shortcut-help-kbd">?</kbd><span>Show Shortcuts</span></div>
+                <div class="kb-item"><kbd id="shortcut-theme-kbd">T</kbd><span>Toggle Theme</span></div>
+                <div class="kb-item"><kbd id="shortcut-pomo-kbd">P</kbd><span>Start/Pause Pomodoro</span></div>
+                <div class="kb-item"><kbd id="shortcut-settings-kbd">S</kbd><span>Open Settings</span></div>
             </div>
             <p class="kb-hint">Press <kbd>Esc</kbd> or <kbd>?</kbd> to close</p>
         </div>
@@ -480,6 +683,7 @@
     <section id="social-dock" class="social-dock">
     </section>
 
+    <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
     <script src="script.js"></script>
 </body>
