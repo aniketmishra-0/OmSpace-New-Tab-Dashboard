@@ -535,6 +535,14 @@
                     <button id="search-engines-manage-btn" class="action-btn"><span class="material-symbols-rounded">travel_explore</span> Manage Engines</button>
                 </div>
             </div>
+            <div class="setting-section card-section" data-settings-tab="tools">
+                <h4>Language</h4>
+                <div class="setting-select-row">
+                    <span class="material-symbols-rounded setting-select-icon">translate</span>
+                    <select id="ui-language-select" class="setting-input" aria-label="Choose dashboard language"></select>
+                </div>
+                <p class="setting-note">Applies locale-aware formatting across the dashboard, including date, time, and location requests.</p>
+            </div>
             <div class="setting-section card-section" data-settings-tab="layout">
                 <h4>Widgets</h4>
                 <div class="settings-group">
@@ -685,6 +693,7 @@
 
     <div id="toast-region" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
+    <script src="i18n-data.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

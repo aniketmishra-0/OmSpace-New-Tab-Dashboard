@@ -26,6 +26,78 @@ const AI_PROVIDER_URLS = {
     perplexity: 'https://www.perplexity.ai'
 };
 
+const UI_LANGUAGES = [
+    { code: 'ar', label: 'Arabic (العربية)' },
+    { code: 'az', label: 'Azerbaijani (Azərbaycanca)' },
+    { code: 'bn', label: 'Bangla (বাংলা)' },
+    { code: 'zh-CN', label: 'Chinese (Simplified) (简体中文)' },
+    { code: 'zh-TW', label: 'Chinese (Traditional) (繁體中文)' },
+    { code: 'cs', label: 'Czech (Čeština)' },
+    { code: 'en', label: 'English (ENGLISH)' },
+    { code: 'fr', label: 'French (Français)' },
+    { code: 'de', label: 'German (Deutsch)' },
+    { code: 'el', label: 'Greek (Ελληνικά)' },
+    { code: 'hi', label: 'Hindi (हिंदी)' },
+    { code: 'hu', label: 'Hungarian (Magyar)' },
+    { code: 'id', label: 'Indonesian (Bahasa Indonesia)' },
+    { code: 'it', label: 'Italian (Italiano)' },
+    { code: 'ja', label: 'Japanese (日本語)' },
+    { code: 'ko', label: 'Korean (한국어)' },
+    { code: 'mr', label: 'Marathi (मराठी)' },
+    { code: 'ne', label: 'Nepali (नेपाली)' },
+    { code: 'fa', label: 'Persian (فارسی)' },
+    { code: 'pl', label: 'Polish (Polski)' },
+    { code: 'pt-BR', label: 'Portuguese (Brazil) (Português)' },
+    { code: 'ru', label: 'Russian (Русский)' },
+    { code: 'sl', label: 'Slovenian (Slovenščina)' },
+    { code: 'es', label: 'Spanish (Español)' },
+    { code: 'ta', label: 'Tamil (தமிழ்)' },
+    { code: 'th', label: 'Thai (ภาษาไทย)' },
+    { code: 'tr', label: 'Turkish (Türkçe)' },
+    { code: 'uk', label: 'Ukrainian (Українська)' },
+    { code: 'ur', label: 'Urdu (اردو)' },
+    { code: 'uz', label: "Uzbek (O'zbek)" },
+    { code: 'vi', label: 'Vietnamese (Tiếng Việt)' }
+];
+
+const UI_LANGUAGE_STRINGS = {
+    ar: { morning: 'صباح الخير', afternoon: 'مساء الخير', evening: 'مساء الخير', work: 'عمل', break: 'استراحة' },
+    az: { morning: 'Sabahınız xeyir', afternoon: 'Günortanız xeyir', evening: 'Axşamınız xeyir', work: 'İş', break: 'Fasilə' },
+    bn: { morning: 'সুপ্রভাত', afternoon: 'শুভ অপরাহ্ন', evening: 'শুভ সন্ধ্যা', work: 'কাজ', break: 'বিরতি' },
+    'zh-CN': { morning: '早上好', afternoon: '下午好', evening: '晚上好', work: '工作', break: '休息' },
+    'zh-TW': { morning: '早安', afternoon: '午安', evening: '晚安', work: '工作', break: '休息' },
+    cs: { morning: 'Dobré ráno', afternoon: 'Dobré odpoledne', evening: 'Dobrý večer', work: 'Práce', break: 'Přestávka' },
+    en: { morning: 'Good Morning', afternoon: 'Good Afternoon', evening: 'Good Evening', work: 'Work', break: 'Break' },
+    fr: { morning: 'Bonjour', afternoon: 'Bon après-midi', evening: 'Bonsoir', work: 'Travail', break: 'Pause' },
+    de: { morning: 'Guten Morgen', afternoon: 'Guten Tag', evening: 'Guten Abend', work: 'Arbeit', break: 'Pause' },
+    el: { morning: 'Καλημέρα', afternoon: 'Καλό απόγευμα', evening: 'Καλησπέρα', work: 'Εργασία', break: 'Διάλειμμα' },
+    hi: { morning: 'सुप्रभात', afternoon: 'शुभ दोपहर', evening: 'शुभ संध्या', work: 'काम', break: 'विराम' },
+    hu: { morning: 'Jó reggelt', afternoon: 'Jó napot', evening: 'Jó estét', work: 'Munka', break: 'Szünet' },
+    id: { morning: 'Selamat pagi', afternoon: 'Selamat siang', evening: 'Selamat malam', work: 'Kerja', break: 'Istirahat' },
+    it: { morning: 'Buongiorno', afternoon: 'Buon pomeriggio', evening: 'Buonasera', work: 'Lavoro', break: 'Pausa' },
+    ja: { morning: 'おはようございます', afternoon: 'こんにちは', evening: 'こんばんは', work: '作業', break: '休憩' },
+    ko: { morning: '좋은 아침이에요', afternoon: '좋은 오후입니다', evening: '좋은 저녁입니다', work: '작업', break: '휴식' },
+    mr: { morning: 'सुप्रभात', afternoon: 'शुभ दुपार', evening: 'शुभ संध्या', work: 'काम', break: 'विश्रांती' },
+    ne: { morning: 'शुभ प्रभात', afternoon: 'शुभ अपराह्न', evening: 'शुभ सन्ध्या', work: 'काम', break: 'विश्राम' },
+    fa: { morning: 'صبح بخیر', afternoon: 'عصر بخیر', evening: 'شب بخیر', work: 'کار', break: 'استراحت' },
+    pl: { morning: 'Dzień dobry', afternoon: 'Dzień dobry', evening: 'Dobry wieczór', work: 'Praca', break: 'Przerwa' },
+    'pt-BR': { morning: 'Bom dia', afternoon: 'Boa tarde', evening: 'Boa noite', work: 'Trabalho', break: 'Pausa' },
+    ru: { morning: 'Доброе утро', afternoon: 'Добрый день', evening: 'Добрый вечер', work: 'Работа', break: 'Перерыв' },
+    sl: { morning: 'Dobro jutro', afternoon: 'Dober dan', evening: 'Dober večer', work: 'Delo', break: 'Odmor' },
+    es: { morning: 'Buenos días', afternoon: 'Buenas tardes', evening: 'Buenas noches', work: 'Trabajo', break: 'Descanso' },
+    ta: { morning: 'காலை வணக்கம்', afternoon: 'மதிய வணக்கம்', evening: 'மாலை வணக்கம்', work: 'வேலை', break: 'இடைவெளி' },
+    th: { morning: 'สวัสดีตอนเช้า', afternoon: 'สวัสดีตอนบ่าย', evening: 'สวัสดีตอนเย็น', work: 'ทำงาน', break: 'พัก' },
+    tr: { morning: 'Günaydın', afternoon: 'Tünaydın', evening: 'İyi akşamlar', work: 'Çalışma', break: 'Mola' },
+    uk: { morning: 'Доброго ранку', afternoon: 'Добрий день', evening: 'Добрий вечір', work: 'Робота', break: 'Перерва' },
+    ur: { morning: 'صبح بخیر', afternoon: 'دوپہر بخیر', evening: 'شام بخیر', work: 'کام', break: 'وقفہ' },
+    uz: { morning: 'Xayrli tong', afternoon: 'Xayrli kun', evening: 'Xayrli kech', work: 'Ish', break: 'Tanaffus' },
+    vi: { morning: 'Chào buổi sáng', afternoon: 'Chào buổi chiều', evening: 'Chào buổi tối', work: 'Làm việc', break: 'Nghỉ giải lao' }
+};
+
+const TRANSLATIONS = window.OMSPACE_TRANSLATIONS || { en: {} };
+const TRANSLATION_SOURCE_SET = new Set(Object.keys(TRANSLATIONS.en || {}));
+const LOCALIZABLE_ATTRIBUTES = ['placeholder', 'title', 'aria-label'];
+
 const QUOTES = [
     { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
     { text: "Innovation distinguishes between a leader and a follower.", author: "Steve Jobs" },
@@ -65,6 +137,7 @@ const DEFAULT_STATE = {
     accent: '#a8c7fa',
     theme: 'dark',
     font: "'Plus Jakarta Sans'",
+    uiLanguage: '',
     bgMode: 'gradient',
     bgUrl: '',
     liveWallpaper: false,
@@ -182,6 +255,10 @@ let currentCreateMode = null;
 let currentCreateDefaults = {};
 let activeSettingsTab = 'look';
 const toastTimeouts = new Map();
+const originalTextValues = new WeakMap();
+const originalAttributeValues = new WeakMap();
+let localizationObserver = null;
+let isApplyingTranslations = false;
 
 const BG_PRESETS = {
     gradient: '',
@@ -229,6 +306,186 @@ const $$ = (s) => document.querySelectorAll(s);
 
 const clone = (value) => JSON.parse(JSON.stringify(value));
 
+function canonicalizeLocale(locale = '') {
+    try {
+        return Intl.getCanonicalLocales(locale)[0] || '';
+    } catch {
+        return String(locale || '').trim();
+    }
+}
+
+function matchSupportedUiLanguage(locale = '') {
+    const canonical = canonicalizeLocale(locale);
+    if (!canonical) return '';
+    if (/^zh-(hant|hk|mo|tw)/i.test(canonical)) return 'zh-TW';
+    if (/^zh/i.test(canonical)) return 'zh-CN';
+    if (/^pt/i.test(canonical)) return 'pt-BR';
+    if (UI_LANGUAGES.some(language => language.code === canonical)) return canonical;
+    const base = canonical.split('-')[0];
+    return UI_LANGUAGES.find(language => language.code === base)?.code || '';
+}
+
+function detectPreferredUiLanguage() {
+    const candidates = typeof navigator !== 'undefined'
+        ? [...(navigator.languages || []), navigator.language]
+        : [];
+    for (const candidate of candidates) {
+        const match = matchSupportedUiLanguage(candidate);
+        if (match) return match;
+    }
+    return 'en';
+}
+
+function getUiLanguage() {
+    return matchSupportedUiLanguage(state.uiLanguage) || detectPreferredUiLanguage();
+}
+
+function getUiLocales() {
+    return [getUiLanguage(), 'en'];
+}
+
+function getUiStrings() {
+    return UI_LANGUAGE_STRINGS[getUiLanguage()] || UI_LANGUAGE_STRINGS.en;
+}
+
+function applyLanguagePreference() {
+    document.documentElement.lang = getUiLanguage();
+}
+
+function renderLanguageOptions() {
+    const select = $('#ui-language-select');
+    if (!select || select.options.length === UI_LANGUAGES.length) return;
+    const fragment = document.createDocumentFragment();
+    UI_LANGUAGES.forEach(language => {
+        const option = document.createElement('option');
+        option.value = language.code;
+        option.textContent = language.label;
+        fragment.appendChild(option);
+    });
+    select.innerHTML = '';
+    select.appendChild(fragment);
+}
+
+function translate(source, params = {}) {
+    const template = (TRANSLATIONS[getUiLanguage()] || {})[source] || source;
+    return template.replace(/__([A-Z0-9_]+)__/g, (_, key) => {
+        if (Object.prototype.hasOwnProperty.call(params, key)) return String(params[key]);
+        if (Object.prototype.hasOwnProperty.call(params, key.toLowerCase())) return String(params[key.toLowerCase()]);
+        return `__${key}__`;
+    });
+}
+
+function hasTranslationSource(value = '') {
+    return TRANSLATION_SOURCE_SET.has(value.trim());
+}
+
+function translatePreservingWhitespace(value = '', params = {}) {
+    const leading = value.match(/^\s*/)?.[0] || '';
+    const trailing = value.match(/\s*$/)?.[0] || '';
+    const core = value.trim();
+    if (!core || !hasTranslationSource(core)) return value;
+    return `${leading}${translate(core, params)}${trailing}`;
+}
+
+function shouldSkipTextNode(node) {
+    const parent = node.parentElement;
+    if (!parent) return true;
+    if (parent.closest('.material-symbols-rounded, script, style, textarea, input, kbd, svg')) return true;
+    return false;
+}
+
+function localizeTextNode(node) {
+    if (!node || shouldSkipTextNode(node)) return;
+    const currentValue = node.textContent || '';
+    const storedSource = originalTextValues.get(node);
+    const translatedStoredSource = storedSource ? translatePreservingWhitespace(storedSource) : '';
+    const shouldUpdateSource = hasTranslationSource(currentValue) && (!storedSource || currentValue !== translatedStoredSource);
+    const sourceValue = shouldUpdateSource ? currentValue : storedSource;
+    if (!sourceValue) return;
+    if (shouldUpdateSource) originalTextValues.set(node, currentValue);
+    const translatedValue = translatePreservingWhitespace(sourceValue);
+    if (translatedValue !== currentValue) {
+        isApplyingTranslations = true;
+        node.textContent = translatedValue;
+        isApplyingTranslations = false;
+    }
+}
+
+function localizeElementAttributes(element) {
+    if (!element || element.nodeType !== Node.ELEMENT_NODE) return;
+    const storedAttributes = originalAttributeValues.get(element) || {};
+    let touched = false;
+    LOCALIZABLE_ATTRIBUTES.forEach(attribute => {
+        const currentValue = element.getAttribute(attribute);
+        if (!currentValue) return;
+        const storedSource = storedAttributes[attribute];
+        const translatedStoredSource = storedSource ? translatePreservingWhitespace(storedSource) : '';
+        const shouldUpdateSource = hasTranslationSource(currentValue) && (!storedSource || currentValue !== translatedStoredSource);
+        const sourceValue = shouldUpdateSource ? currentValue : storedSource;
+        if (!sourceValue) return;
+        if (shouldUpdateSource) {
+            storedAttributes[attribute] = currentValue;
+            touched = true;
+        }
+        const translatedValue = translatePreservingWhitespace(sourceValue);
+        if (translatedValue !== currentValue) {
+            isApplyingTranslations = true;
+            element.setAttribute(attribute, translatedValue);
+            isApplyingTranslations = false;
+        }
+    });
+    if (touched) originalAttributeValues.set(element, storedAttributes);
+}
+
+function localizeDomSubtree(root = document.body) {
+    if (!root) return;
+    if (root.nodeType === Node.TEXT_NODE) {
+        localizeTextNode(root);
+        return;
+    }
+    if (root.nodeType !== Node.ELEMENT_NODE) return;
+    localizeElementAttributes(root);
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT);
+    let current = walker.currentNode;
+    while (current) {
+        if (current.nodeType === Node.TEXT_NODE) localizeTextNode(current);
+        else localizeElementAttributes(current);
+        current = walker.nextNode();
+    }
+}
+
+function localizeDocument() {
+    document.title = translate('New Tab');
+    localizeDomSubtree(document.body);
+}
+
+function initLocalizationObserver() {
+    if (localizationObserver || !document.body) return;
+    localizationObserver = new MutationObserver(mutations => {
+        if (isApplyingTranslations) return;
+        mutations.forEach(mutation => {
+            if (mutation.type === 'attributes') {
+                localizeElementAttributes(mutation.target);
+                return;
+            }
+            if (mutation.type === 'characterData') {
+                localizeTextNode(mutation.target);
+                return;
+            }
+            mutation.addedNodes.forEach(node => {
+                localizeDomSubtree(node);
+            });
+        });
+    });
+    localizationObserver.observe(document.body, {
+        subtree: true,
+        childList: true,
+        characterData: true,
+        attributes: true,
+        attributeFilter: LOCALIZABLE_ATTRIBUTES
+    });
+}
+
 function hasSearchEngine(engineId, engines = state.searchEngines) {
     return Array.isArray(engines) && engines.some(engine => engine.id === engineId);
 }
@@ -273,6 +530,7 @@ function normalizeStateShape(source = {}) {
     if (!nextState.weatherUnit) nextState.weatherUnit = 'c';
     if (!nextState.aiProvider) nextState.aiProvider = 'chatgpt';
     if (!nextState.bookmarkSource) nextState.bookmarkSource = 'recent';
+    nextState.uiLanguage = matchSupportedUiLanguage(nextState.uiLanguage) || detectPreferredUiLanguage();
     if (nextState.layoutLocked === undefined) nextState.layoutLocked = true;
     if (!hasSearchEngine(nextState.engine, nextState.searchEngines)) nextState.engine = nextState.searchEngines[0]?.id || DEFAULT_SEARCH_ENGINES[0].id;
 
@@ -371,6 +629,7 @@ function buildSyncState() {
         accent: state.accent,
         theme: state.theme,
         font: state.font,
+        uiLanguage: state.uiLanguage,
         engine: state.engine,
         searchEngines: clone(state.searchEngines || DEFAULT_SEARCH_ENGINES),
         weatherUnit: state.weatherUnit,
@@ -430,10 +689,10 @@ function showToast(message, type = 'info', title = '') {
     toast.innerHTML = `
         <div class="toast-icon"><span class="material-symbols-rounded">${icon}</span></div>
         <div class="toast-body">
-            <div class="toast-title">${esc(heading)}</div>
-            <div class="toast-message">${esc(message)}</div>
+            <div class="toast-title">${esc(translate(heading))}</div>
+            <div class="toast-message">${esc(translate(message))}</div>
         </div>
-        <button class="toast-close" aria-label="Dismiss"><span class="material-symbols-rounded">close</span></button>
+        <button class="toast-close" aria-label="${esc(translate('Dismiss'))}"><span class="material-symbols-rounded">close</span></button>
     `;
     toast.querySelector('.toast-close')?.addEventListener('click', () => dismissToast(toastId));
     region.appendChild(toast);
@@ -547,6 +806,7 @@ function submitCreateModal() {
 // ═══════════════════════════════════════
 async function init() {
     await loadState();
+    initLocalizationObserver();
     renderAll();
     startClock();
     if (state.showWeather) fetchWeather();
@@ -588,6 +848,7 @@ function saveState() {
 // RENDER ALL
 // ═══════════════════════════════════════
 function renderAll() {
+    applyLanguagePreference();
     applyThemeMode();
     applyAccent();
     applyFont();
@@ -623,6 +884,7 @@ function renderAll() {
     renderSocialDock();
     loadLayout();
     initDragAndDrop();
+    localizeDocument();
 }
 
 // ═══════════════════════════════════════
@@ -658,7 +920,8 @@ function switchProfile(profileId) {
     state.profileStates[state.activeProfile] = extractProfileState(state);
     const profileSnapshot = normalizeStateShape(state.profileStates[profileId]);
     const syncEnabled = state.syncEnabled;
-    state = { ...clone(DEFAULT_STATE), ...profileSnapshot, profileStates: state.profileStates, activeProfile: profileId, syncEnabled };
+    const uiLanguage = state.uiLanguage;
+    state = { ...clone(DEFAULT_STATE), ...profileSnapshot, profileStates: state.profileStates, activeProfile: profileId, syncEnabled, uiLanguage };
     ensureProfileStates();
     renderAll();
     if (state.showWeather && !state.weatherCache) fetchWeather();
@@ -788,21 +1051,29 @@ function updateClock() {
     const h = now.getHours();
     const m = now.getMinutes();
     const s = now.getSeconds();
+    const uiStrings = getUiStrings();
+    const timeParts = new Intl.DateTimeFormat(getUiLocales(), {
+        hour: 'numeric',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: !state.use24Hour
+    }).formatToParts(now);
 
     // Greeting
-    let greetText = 'Good Evening';
+    let greetText = uiStrings.evening;
     let emoji = '🌙';
-    if (h < 12) { greetText = 'Good Morning'; emoji = '☕️'; }
-    else if (h < 18) { greetText = 'Good Afternoon'; emoji = '☀️'; }
+    if (h < 12) { greetText = uiStrings.morning; emoji = '☕️'; }
+    else if (h < 18) { greetText = uiStrings.afternoon; emoji = '☀️'; }
     
     const baseGreeting = state.customGreeting?.trim() || greetText;
     let greet = state.userName ? `${baseGreeting}, ${state.userName}! ${emoji}` : `${baseGreeting}! ${emoji}`;
 
     // Digital
-    const hDisplay = state.use24Hour ? (h < 10 ? '0' + h : h) : (h % 12 || 12);
-    const mStr = m < 10 ? '0' + m : '' + m;
-    const sStr = s < 10 ? '0' + s : '' + s;
-    const ampm = state.use24Hour ? '' : (h >= 12 ? ' PM' : ' AM');
+    const hDisplay = timeParts.find(part => part.type === 'hour')?.value || (state.use24Hour ? String(h).padStart(2, '0') : String(h % 12 || 12));
+    const mStr = timeParts.find(part => part.type === 'minute')?.value || String(m).padStart(2, '0');
+    const sStr = timeParts.find(part => part.type === 'second')?.value || String(s).padStart(2, '0');
+    const ampmLabel = state.use24Hour ? '' : timeParts.find(part => part.type === 'dayPeriod')?.value || '';
+    const ampm = ampmLabel ? ` ${ampmLabel}` : '';
 
     const clockH = $('#clock-hours');
     const clockM = $('#clock-mins');
@@ -819,7 +1090,7 @@ function updateClock() {
 
     const dateEl = $('#date-text');
     if (dateEl) {
-        dateEl.textContent = now.toLocaleDateString(undefined, {
+        dateEl.textContent = now.toLocaleDateString(getUiLocales(), {
             weekday: 'long', month: 'long', day: 'numeric'
         });
     }
@@ -919,7 +1190,7 @@ function fetchWeather(force = false) {
             })
             .catch(() => updateEl('#weather-cond', 'Unavailable'));
 
-        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=en`)
+        fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=${encodeURIComponent(getUiLanguage())}`)
             .then(r => r.json())
             .then(data => {
                 const a = data.address || {};
@@ -963,8 +1234,9 @@ function updatePomoDisplay() {
         state.pomoSessionDate = today;
         saveState();
     }
+    const uiStrings = getUiStrings();
     updateEl('#pomo-sessions', state.pomoSessions.toString());
-    updateEl('#pomo-mode-label', pomoIsWork ? 'Work' : 'Break');
+    updateEl('#pomo-mode-label', pomoIsWork ? uiStrings.work : uiStrings.break);
     renderPomoTime();
     renderPomoRing();
 }
@@ -1011,7 +1283,8 @@ function togglePomo() {
                 }
                 pomoIsWork = !pomoIsWork;
                 pomoTimeLeft = pomoIsWork ? 25 * 60 : 5 * 60;
-                updateEl('#pomo-mode-label', pomoIsWork ? 'Work' : 'Break');
+                const uiStrings = getUiStrings();
+                updateEl('#pomo-mode-label', pomoIsWork ? uiStrings.work : uiStrings.break);
                 const b = $('#pomo-start');
                 if (b) b.querySelector('.material-symbols-rounded').textContent = 'play_arrow';
             }
@@ -1095,39 +1368,13 @@ function clearFocus() {
 async function renderQuote() {
     if (state.customQuoteEnabled && state.customQuoteText.trim()) {
         updateEl('#quote-text', `"${state.customQuoteText.trim()}"`);
-        updateEl('#quote-author', state.customQuoteAuthor.trim() ? `— ${state.customQuoteAuthor.trim()}` : '— You');
+        updateEl('#quote-author', state.customQuoteAuthor.trim() ? `— ${state.customQuoteAuthor.trim()}` : `— ${translate('You')}`);
         return;
     }
-    const today = new Date().toDateString();
-    const cachedDate = localStorage.getItem('omspace_quote_date');
-    const cachedText = localStorage.getItem('omspace_quote_text');
-    const cachedAuthor = localStorage.getItem('omspace_quote_author');
-
-    if (cachedDate === today && cachedText && cachedAuthor && cachedText.length <= 85) {
-        updateEl('#quote-text', `"${cachedText}"`);
-        updateEl('#quote-author', `— ${cachedAuthor}`);
-        return;
-    }
-
-    try {
-        if (state.performanceMode) throw new Error('Performance mode');
-        const res = await fetch('https://dummyjson.com/quotes/random?minlength=20&maxlength=85');
-        if (!res.ok) throw new Error('Network error');
-        const data = await res.json();
-        
-        localStorage.setItem('omspace_quote_date', today);
-        localStorage.setItem('omspace_quote_text', data.quote);
-        localStorage.setItem('omspace_quote_author', data.author);
-        
-        updateEl('#quote-text', `"${data.quote}"`);
-        updateEl('#quote-author', `— ${data.author}`);
-    } catch(err) {
-        // Fallback to offline array if no internet
-        const dayIndex = Math.floor(Date.now() / 86400000) % QUOTES.length;
-        const q = QUOTES[dayIndex];
-        updateEl('#quote-text', `"${q.text}"`);
-        updateEl('#quote-author', `— ${q.author}`);
-    }
+    const dayIndex = Math.floor(Date.now() / 86400000) % QUOTES.length;
+    const q = QUOTES[dayIndex];
+    updateEl('#quote-text', `"${q.text}"`);
+    updateEl('#quote-author', `— ${q.author}`);
 }
 
 // ═══════════════════════════════════════
@@ -1437,7 +1684,7 @@ function addHabit(payload = {}) {
     saveState();
     renderHabits();
     closeCreateModal();
-    showToast(`${name} added to habits.`, 'success', 'Habit created');
+    showToast(translate('__NAME__ added to habits.', { NAME: name }), 'success', 'Habit created');
 }
 
 function toggleHabit(idx) {
@@ -1464,7 +1711,7 @@ function getHabitHistoryDays(habit) {
     for (let offset = 6; offset >= 0; offset--) {
         const day = new Date();
         day.setDate(day.getDate() - offset);
-        const label = day.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+        const label = day.toLocaleDateString(getUiLocales(), { weekday: 'short', month: 'short', day: 'numeric' });
         days.push({ label, done: history.has(day.toDateString()) });
     }
     return days;
@@ -1475,7 +1722,7 @@ function deleteHabit(idx) {
     state.habits.splice(idx, 1);
     saveState();
     renderHabits();
-    showToast(`${habitName} removed.`, 'info', 'Habit deleted');
+    showToast(translate('__NAME__ removed.', { NAME: habitName }), 'info', 'Habit deleted');
 }
 
 // ═══════════════════════════════════════
@@ -1498,7 +1745,7 @@ function updateWorldClockTimes() {
         const el = $(`#wc-time-${i}`);
         if (!el) return;
         try {
-            const time = new Date().toLocaleTimeString('en-US', {
+            const time = new Date().toLocaleTimeString(getUiLocales(), {
                 timeZone: wc.tz,
                 hour: '2-digit',
                 minute: '2-digit',
@@ -1519,7 +1766,7 @@ function addWorldClock(payload = {}) {
         return;
     }
     try {
-        new Intl.DateTimeFormat('en-US', { timeZone: tz }).format(new Date());
+        new Intl.DateTimeFormat(getUiLocales(), { timeZone: tz }).format(new Date());
     } catch {
         showToast('Timezone format looks invalid. Use something like Asia/Dubai.', 'error', 'Invalid timezone');
         return;
@@ -1528,7 +1775,7 @@ function addWorldClock(payload = {}) {
     saveState();
     renderWorldClocks();
     closeCreateModal();
-    showToast(`${city} clock added.`, 'success', 'World clock created');
+    showToast(translate('__NAME__ clock added.', { NAME: city }), 'success', 'World clock created');
 }
 
 function deleteWorldClock(idx) {
@@ -1536,7 +1783,7 @@ function deleteWorldClock(idx) {
     state.worldClocks.splice(idx, 1);
     saveState();
     renderWorldClocks();
-    showToast(`${city} removed.`, 'info', 'World clock deleted');
+    showToast(translate('__NAME__ removed.', { NAME: city }), 'info', 'World clock deleted');
 }
 
 // ═══════════════════════════════════════
@@ -1628,7 +1875,7 @@ function addAgendaItem() {
     dateInput.value = '';
     saveState();
     renderAgenda();
-    showToast(`${title} added to agenda.`, 'success', 'Event added');
+    showToast(translate('__TITLE__ added to agenda.', { TITLE: title }), 'success', 'Event added');
 }
 
 function deleteAgendaItem(id) {
@@ -1636,7 +1883,7 @@ function deleteAgendaItem(id) {
     state.agendaItems = state.agendaItems.filter(item => item.id !== id);
     saveState();
     renderAgenda();
-    showToast(`${title} removed from agenda.`, 'info', 'Event deleted');
+    showToast(translate('__TITLE__ removed from agenda.', { TITLE: title }), 'info', 'Event deleted');
 }
 
 function renderCustomWidgets() {
@@ -1671,7 +1918,7 @@ function addCustomWidget(payload = {}) {
     saveState();
     renderCustomWidgets();
     closeCreateModal();
-    showToast(`${title} widget created.`, 'success', 'Custom widget added');
+    showToast(translate('__TITLE__ widget created.', { TITLE: title }), 'success', 'Custom widget added');
 }
 
 function deleteCustomWidget(id) {
@@ -1679,7 +1926,7 @@ function deleteCustomWidget(id) {
     state.customWidgets = state.customWidgets.filter(widget => widget.id !== id);
     saveState();
     renderCustomWidgets();
-    showToast(`${title} removed.`, 'info', 'Widget deleted');
+    showToast(translate('__NAME__ removed.', { NAME: title }), 'info', 'Widget deleted');
 }
 
 function renderQuickActions() {
@@ -1733,7 +1980,7 @@ function getRecentPomodoroStats() {
         day.setDate(day.getDate() - offset);
         const key = day.toISOString().split('T')[0];
         stats.push({
-            label: day.toLocaleDateString(undefined, { weekday: 'short' }),
+            label: day.toLocaleDateString(getUiLocales(), { weekday: 'short' }),
             count: history[key] || 0
         });
     }
@@ -1789,8 +2036,8 @@ function renderTabGroups() {
             }
             list.innerHTML = visibleGroups.map(entry => `
                 <button class="wc-item" data-action="focus-group" data-group-id="${entry.groupId}">
-                    <span class="wc-city">${esc(entry.group.title || `Group ${entry.groupId}`)}</span>
-                    <span class="wc-time">${entry.tabs.length} tabs</span>
+                    <span class="wc-city">${esc(entry.group.title || translate('Group __GROUP__', { GROUP: entry.groupId }))}</span>
+                    <span class="wc-time">${esc(translate('__COUNT__ tabs', { COUNT: entry.tabs.length }))}</span>
                 </button>
             `).join('');
         });
@@ -2120,6 +2367,7 @@ function toggleKBOverlay() {
 // SETTINGS UI SYNC
 // ═══════════════════════════════════════
 function syncSettingsUI() {
+    renderLanguageOptions();
     $$('.accent-dot').forEach(d => d.classList.toggle('active', d.dataset.color === state.accent));
     $$('.bg-preset-btn').forEach(b => b.classList.toggle('active', b.dataset.bg === state.bgMode));
     $$('.font-chip').forEach(f => f.classList.toggle('active', f.dataset.font === state.font));
@@ -2169,6 +2417,8 @@ function syncSettingsUI() {
     if (quoteAuthorInput) quoteAuthorInput.value = state.customQuoteAuthor || '';
     const providerSelect = $('#ai-provider-select');
     if (providerSelect) providerSelect.value = state.aiProvider || 'chatgpt';
+    const languageSelect = $('#ui-language-select');
+    if (languageSelect) languageSelect.value = getUiLanguage();
     const restoreModeSelect = $('#restore-mode-select');
     if (restoreModeSelect) restoreModeSelect.value = state.restoreMode || 'all';
     const shortcutSearch = $('#shortcut-search-input');
@@ -2290,6 +2540,12 @@ function setupAllEvents() {
         if (state.showWeather) fetchWeather(true);
     });
     $('#weather-refresh-btn')?.addEventListener('click', () => fetchWeather(true));
+    $('#ui-language-select')?.addEventListener('change', e => {
+        state.uiLanguage = matchSupportedUiLanguage(e.target.value) || detectPreferredUiLanguage();
+        saveState();
+        renderAll();
+        if (state.showWeather) fetchWeather(true);
+    });
 
     // 24 Hour Time
     bindToggle('#toggle-24h', 'use24Hour', updateClock);
@@ -2598,7 +2854,7 @@ function normalizeExternalUrl(value) {
 
 function formatDateLabel(value) {
     try {
-        return new Date(value).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        return new Date(value).toLocaleDateString(getUiLocales(), { month: 'short', day: 'numeric' });
     } catch {
         return value;
     }
@@ -2606,7 +2862,7 @@ function formatDateLabel(value) {
 
 function formatDateTimeLabel(value) {
     try {
-        return new Date(value).toLocaleString(undefined, {
+        return new Date(value).toLocaleString(getUiLocales(), {
             month: 'short',
             day: 'numeric',
             hour: 'numeric',
